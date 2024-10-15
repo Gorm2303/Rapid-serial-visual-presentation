@@ -80,7 +80,8 @@ class _WPMSliderWidgetState extends State<WPMSliderWidget> {
               child: Slider(
                 value: _wpm.toDouble(),
                 min: 50,
-                max: 1200,
+                max: 2000,
+                divisions: 1950,
                 label: _wpm.toString(),
                 onChanged: (double value) {
                   setState(() {
@@ -101,8 +102,8 @@ class _WPMSliderWidgetState extends State<WPMSliderWidget> {
         Slider(
           value: _wordsPerDisplay.toDouble(),
           min: 1,
-          max: 15,
-          divisions: 14,
+          max: 25,
+          divisions: 24,
           label: _wordsPerDisplay.toString(),
           onChanged: (double value) {
             setState(() {

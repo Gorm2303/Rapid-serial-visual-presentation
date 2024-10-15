@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/text_splitter.dart';
 import '../utils/time_calculator.dart';
@@ -10,6 +11,8 @@ class TextProvider extends ChangeNotifier {
   int _wpm = 200;  // Default Words Per Minute
   bool _showReadingLines = false;  // Option for displaying reading lines
   bool _repeatText = false;  // Option to repeat text when it ends
+  Timer? _timer;  // Timer for automatic reading pace
+  bool _isReading = false;  // Tracks if reading is ongoing
   final TextSplitter _textSplitter = TextSplitter();
 
   // Getters
@@ -20,6 +23,7 @@ class TextProvider extends ChangeNotifier {
   int get wpm => _wpm;
   bool get showReadingLines => _showReadingLines;
   bool get repeatText => _repeatText;
+  bool get isReading => _isReading;
 
   // Calculate remaining reading time using TimeCalculator
   double get remainingTime {
@@ -33,6 +37,12 @@ class TextProvider extends ChangeNotifier {
     return TimeCalculator.calculateDisplayTime(_wordsPerDisplay, _wpm);
   }
 
+  // Getter for the formatted remaining time
+  String get formattedRemainingTime {
+    double remainingSeconds = remainingTime * 60;  // Convert minutes to seconds
+    return TimeCalculator.formatTime(remainingSeconds);
+  }
+
   // Set the full text and split into chunks
   void setText(String text) {
     _fullText = text;
@@ -41,30 +51,59 @@ class TextProvider extends ChangeNotifier {
     notifyListeners();  // Notify UI to update
   }
 
-  // Update words per display
+  // Update words per display (restart the timer)
   void setWordsPerDisplay(int wordsCount) {
     _wordsPerDisplay = wordsCount;
-    _splitTextIntoChunks();
+    _splitTextIntoChunks();  // Split text into chunks based on the new count
+    if (_isReading) {
+      _restartTimer();  // Restart the timer with the updated settings
+    }
     notifyListeners();
   }
 
-  // Update WPM
+  // Update WPM (restart the timer)
   void setWPM(int newWPM) {
     _wpm = newWPM;
+    if (_isReading) {
+      _restartTimer();  // Restart the timer with the updated settings
+    }
     notifyListeners();
   }
 
+  // Toggle the visibility of reading lines
   void toggleReadingLines(bool value) {
     _showReadingLines = value;
     notifyListeners();
   }
 
+  // Toggle the repeat text option
   void toggleRepeatText(bool value) {
     _repeatText = value;
     notifyListeners();
   }
 
-  // Split text into chunks
+  // Method to move to the next chunk (with optional repeat logic)
+  void nextChunk() {
+    if (_currentChunkIndex < _textChunks.length - 1) {
+      _currentChunkIndex++;
+    } else if (_repeatText) {
+      // If repeat is enabled, go back to the first chunk
+      _currentChunkIndex = 0;
+    } else {
+      stopReading();  // Stop if repeat is not enabled and we reach the end
+    }
+    notifyListeners();
+  }
+
+  // Method to move to the previous chunk
+  void previousChunk() {
+    if (_currentChunkIndex > 0) {
+      _currentChunkIndex--;
+    }
+    notifyListeners();
+  }
+
+  // Split the text into chunks based on the words per display
   void _splitTextIntoChunks() {
     _textChunks = _textSplitter.splitTextIntoChunks(_fullText, _wordsPerDisplay);
   }
@@ -78,28 +117,56 @@ class TextProvider extends ChangeNotifier {
     return wordCount;
   }
 
-  // Method to move to the next chunk
-  void nextChunk() {
-    if (_currentChunkIndex < _textChunks.length - 1) {
-      _currentChunkIndex++;
-    } else if (_repeatText) {
-      // If repeat is enabled, go back to the first chunk
-      _currentChunkIndex = 0;
+  // Timer control based on WPM
+  void startReading() {
+    stopReading();  // Stop any existing timers
+
+    _isReading = true;
+
+    // Create a function to handle chunk display and timer recreation
+    void displayNextChunk() {
+      // Dynamically calculate display time for each chunk (in milliseconds)
+      int displayTimeInMillis = (TimeCalculator.calculateDisplayTime(_wordsPerDisplay, _wpm) * 1000).toInt();
+
+      // Start a new timer for the next chunk with the calculated duration (in milliseconds)
+      _timer = Timer(Duration(milliseconds: displayTimeInMillis), () {
+        // Move to the next chunk or stop if finished
+        if (_currentChunkIndex < _textChunks.length - 1) {
+          _currentChunkIndex++;
+        } else if (_repeatText) {
+          _currentChunkIndex = 0;  // Loop back to the first chunk if repeat is enabled
+        } else {
+          stopReading();  // Stop the timer if text ends and repeat is not enabled
+          return;
+        }
+
+        notifyListeners();  // Update the UI after every chunk
+
+        // Start the timer for the next chunk
+        displayNextChunk();
+      });
+
+      // Immediately notify the listeners to show the current chunk before waiting for the timer
+      notifyListeners();
     }
-    notifyListeners();
+
+    // Start the first timer and display the first chunk immediately
+    displayNextChunk();
   }
 
-  // Method to move to the previous chunk
-  void previousChunk() {
-    if (_currentChunkIndex > 0) {
-      _currentChunkIndex--;
-    }
-    notifyListeners();
+
+
+  // Restart the timer (called when WPM or words per display changes during reading)
+  void _restartTimer() {
+    stopReading();  // Stop the current timer
+    startReading();  // Start a new timer with the updated settings
   }
 
-  // Getter for the formatted remaining time
-  String get formattedRemainingTime {
-    double remainingSeconds = remainingTime * 60;  // Convert minutes to seconds
-    return TimeCalculator.formatTime(remainingSeconds);
+  // Stop reading and cancel the timer
+  void stopReading() {
+    _isReading = false;
+    _timer?.cancel();
+    _timer = null;
+    notifyListeners();  // Ensure the UI reflects that reading has stopped
   }
 }

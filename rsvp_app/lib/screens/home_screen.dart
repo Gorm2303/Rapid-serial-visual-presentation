@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
+import 'package:rsvp_app/widgets/reading_widget.dart';
 import '../widgets/text_input_widget.dart';
 import '../services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
@@ -15,100 +16,133 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _textController = TextEditingController();
   final FileService _fileService = FileService();
+  double _maxTextWidth = 300;  // Default value for maxWidth
 
   @override
   Widget build(BuildContext context) {
-    final textProvider = Provider.of<TextProvider>(context, listen: false);
+    final textProvider = Provider.of<TextProvider>(context);  // Listening for all changes now
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home Screen')),
+      appBar: AppBar(title: const Text('Reading Speed App')),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            // Use Flexible to ensure the text field only grows as much as needed
-            Flexible(
-              fit: FlexFit.loose,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextInputWidget(controller: _textController),
-              ),
+        padding: const EdgeInsets.all(16.0),
+        child: Center(  // Center the entire content
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 1000,  // Use the passed maxWidth
             ),
-            const SizedBox(height: 16), // Spacing between input and buttons
-            // WPM and Words Per Display Sliders with TextField for WPM
-            WPMSliderWidget(
-              initialWpm: Provider.of<TextProvider>(context, listen: false).wpm,
-              initialWordsPerDisplay: Provider.of<TextProvider>(context, listen: false).wordsPerDisplay,
-              onWPMChanged: (newWPM) {
-                Provider.of<TextProvider>(context, listen: false).setWPM(newWPM);
-              },
-              onWordsPerDisplayChanged: (newWordsCount) {
-                Provider.of<TextProvider>(context, listen: false).setWordsPerDisplay(newWordsCount);
-              },
-            ),
-            // Display the formatted time each chunk is shown for
-            Consumer<TextProvider>(
-              builder: (context, textProvider, child) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(
-                    'Display Time: ${textProvider.displayTime.toStringAsFixed(2)} seconds',
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+            child: Column(
+              children: [
+                // Use Flexible to ensure the text field only grows as much as needed
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextInputWidget(controller: _textController),
                   ),
-                );
-              },
-            ),
-            // Check button for displaying reading lines
-            CheckboxListTile(
-              title: const Text('Display Reading Lines'),
-              value: textProvider.showReadingLines,  // Get the current value from the provider
-              onChanged: (bool? value) {
-                if (value != null) {
-                  setState(() {
-                    textProvider.toggleReadingLines(value);  // Update value in the provider
-                  });
-                }
-              },
-            ),
+                ),
+                const SizedBox(height: 16), // Spacing between input and buttons
 
-            // Check button for repeating text
-            CheckboxListTile(
-              title: const Text('Repeat Text'),
-              value: textProvider.repeatText,  // Get the current value from the provider
-              onChanged: (bool? value) {
-                if (value != null) {
-                  setState(() {
-                    textProvider.toggleRepeatText(value);  // Update value in the provider
-                  });
-                }
-              },
+                // WPM and Words Per Display Sliders with TextField for WPM
+                WPMSliderWidget(
+                  initialWpm: textProvider.wpm,  // Listening to changes
+                  initialWordsPerDisplay: textProvider.wordsPerDisplay,  // Listening to changes
+                  onWPMChanged: (newWPM) {
+                    textProvider.setWPM(newWPM);  // Update the provider directly
+                  },
+                  onWordsPerDisplayChanged: (newWordsCount) {
+                    textProvider.setWordsPerDisplay(newWordsCount);  // Update the provider directly
+                  },
+                ),
+                
+                // Display the formatted time each chunk is shown for
+                Consumer<TextProvider>(
+                  builder: (context, textProvider, child) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,  // Align center horizontally
+                      children: [
+                        Text(
+                          'Display Time: ${textProvider.displayTime.toStringAsFixed(2)} seconds',
+                          style: const TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                        // Add a Slider for maxWidth
+                        Text('Max Text Width: ${_maxTextWidth.toStringAsFixed(0)}'),
+                      ],
+                    );
+                  },
+                ),
+                Slider(
+                  value: _maxTextWidth,
+                  min: 200,
+                  max: 800,  // Adjust the range as necessary
+                  divisions: 12,
+                  label: _maxTextWidth.toStringAsFixed(0),
+                  onChanged: (double value) {
+                    setState(() {
+                      _maxTextWidth = value;
+                    });
+                  },
+                ),
+
+                // Check button for displaying reading lines
+                CheckboxListTile(
+                  title: const Text('Display Reading Lines'),
+                  value: textProvider.showReadingLines,  // Get the current value from the provider
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      textProvider.toggleReadingLines(value);  // Directly use provider method
+                    }
+                  },
+                ),
+
+                // Check button for repeating text
+                CheckboxListTile(
+                  title: const Text('Repeat Text'),
+                  value: textProvider.repeatText,  // Get the current value from the provider
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      textProvider.toggleRepeatText(value);  // Directly use provider method
+                    }
+                  },
+                ),
+
+                // File Upload and Navigation Buttons
+                ElevatedButton(
+                  onPressed: () async {
+                    String? fileContent = await _fileService.pickTextFile();
+                    if (fileContent != null) {
+                      _textController.text = fileContent;
+                      textProvider.setText(fileContent); // Set the text in the provider
+                    }
+                  },
+                  child: const Text('Upload Text File'),
+                ),
+                
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/history');
+                  },
+                  child: const Text('Go to History Screen'),
+                ),
+                
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    textProvider.setText(_textController.text);
+                    textProvider.startReading();  // Start the reading session
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReadingWidget(maxWidth: _maxTextWidth),  // Pass the maxWidth value
+                      ),
+                    );
+                  },
+                  child: const Text('Start Reading'),
+                ),
+              ],
             ),
-            // File Upload and Navigation Buttons
-            ElevatedButton(
-              onPressed: () async {
-                String? fileContent = await _fileService.pickTextFile();
-                if (fileContent != null) {
-                  _textController.text = fileContent;
-                  textProvider.setText(fileContent); // Set the text in the provider
-                }
-              },
-              child: const Text('Upload Text File'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/history');
-              },
-              child: const Text('Go to History Screen'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/reading');
-              },
-              child: const Text('Go to Reading Screen'),
-            ),
-          ],
+          ),
         ),
       ),
     );
