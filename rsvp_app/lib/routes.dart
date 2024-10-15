@@ -15,7 +15,7 @@ class AppRoutes {
       case history:
         return MaterialPageRoute(builder: (_) => const HistoryScreen());
       case reading:
-        return MaterialPageRoute(builder: (_) => const ReadingScreen());
+        return MaterialPageRoute(builder: (_) => const ReadingScreen(maxWidth: 300,));
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

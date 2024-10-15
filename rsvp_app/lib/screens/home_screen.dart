@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
-import 'package:rsvp_app/widgets/reading_widget.dart';
+import 'package:rsvp_app/screens/reading_screen.dart';
 import '../widgets/text_input_widget.dart';
 import '../services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
               maxWidth: 1000,  // Use the passed maxWidth
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,  // Align all content to the left
               children: [
                 // Use Flexible to ensure the text field only grows as much as needed
                 Flexible(
@@ -59,14 +60,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 Consumer<TextProvider>(
                   builder: (context, textProvider, child) {
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,  // Align center horizontally
+                      crossAxisAlignment: CrossAxisAlignment.start,  // Align text to the left
                       children: [
                         Text(
                           'Display Time: ${textProvider.displayTime.toStringAsFixed(2)} seconds',
-                          style: const TextStyle(fontSize: 16, color: Colors.grey),
+                          style: const TextStyle(fontSize: 16),
                         ),
                         // Add a Slider for maxWidth
-                        Text('Max Text Width: ${_maxTextWidth.toStringAsFixed(0)}'),
+                        Text(
+                          'Max Text Width: ${_maxTextWidth.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
                       ],
                     );
                   },
@@ -134,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ReadingWidget(maxWidth: _maxTextWidth),  // Pass the maxWidth value
+                        builder: (context) => ReadingScreen(maxWidth: _maxTextWidth),  // Pass the maxWidth value
                       ),
                     );
                   },
