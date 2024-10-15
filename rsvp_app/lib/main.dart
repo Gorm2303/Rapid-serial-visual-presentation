@@ -6,6 +6,7 @@ import 'providers/history_provider.dart';
 import 'routes.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensures platform binding
   runApp(const MyApp());
 }
 
