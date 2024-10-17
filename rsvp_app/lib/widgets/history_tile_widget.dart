@@ -54,22 +54,34 @@ class HistoryTileWidget extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.play_arrow),
               title: const Text('Continue Reading'),
-              onTap: onContinueReading,
+              onTap: () {
+                Navigator.pop(context);  // Close the popup
+                onContinueReading();  // Call the continue reading callback
+              },
             ),
             ListTile(
               leading: const Icon(Icons.restart_alt),
               title: const Text('Start from Beginning'),
-              onTap: onStartFromBeginning,
+              onTap: () {
+                Navigator.pop(context);  // Close the popup
+                onStartFromBeginning();  // Call the start from beginning callback
+              },
             ),
             ListTile(
               leading: const Icon(Icons.edit),
               title: const Text('Edit Text'),
-              onTap: onEditText,
+              onTap: () {
+                Navigator.pop(context);  // Close the popup
+                onEditText();  // Call the edit text callback
+              },
             ),
             ListTile(
               leading: const Icon(Icons.delete),
               title: const Text('Delete Text'),
-              onTap: onDelete,
+              onTap: () {
+                Navigator.pop(context);  // Close the popup
+                onDelete();  // Call the delete callback
+              },
             ),
           ],
         );

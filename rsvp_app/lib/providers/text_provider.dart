@@ -68,6 +68,27 @@ ReadingText _currentReadingText = ReadingText(
     return TimeCalculator.formatTime(remainingSeconds);
   }
 
+  void setCurrentChunkIndexFromPeriod(double progress) {
+    // Step 1: Calculate the chunk index based on the progress
+    int targetChunkIndex = (progress * _textChunks.length).floor();
+
+    // Step 2: Traverse the text chunks backwards from the target chunk
+    for (int i = targetChunkIndex; i >= 0; i--) {
+      if (targetChunkIndex - i > 5) {
+        // If we have traversed more than 5 chunks, set the index here
+        _currentChunkIndex = i;
+        break;
+      }
+      if (_textChunks[i].contains('.')) {
+        // If we find a chunk that contains a period, set the index here
+        _currentChunkIndex = i;
+        break;
+      }
+    }
+
+    notifyListeners();  // Update the UI
+  }
+
   // Set current ReadingText and split text into chunks
   void setReadingText(ReadingText readingText) {
     _currentReadingText = readingText;

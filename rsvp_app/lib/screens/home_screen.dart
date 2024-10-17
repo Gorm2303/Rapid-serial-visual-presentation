@@ -148,8 +148,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 ElevatedButton(
                   onPressed: () {
-                    String title = _textController.text.split('\n')[0];
-                    if (title.length < 60) {
+                    String title;
+                    if (_textController.text.length < 60) {
                       title = _textController.text;
                     } else {
                       title = _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' ');
@@ -167,7 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     textProvider.setReadingText(readingText);  // Pass the ReadingText object
                     textProvider.startReading();  // Start the reading session
-                    
+                    _textController.text = '';  // Clear the text field
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
