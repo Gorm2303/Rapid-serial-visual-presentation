@@ -1,12 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/text_provider.dart';
+import 'package:rsvp_app/providers/text_provider.dart';
 
-class ReadingScreen extends StatelessWidget {
-  final double maxWidth;  // Add maxWidth parameter
+class ReadingScreen extends StatefulWidget {
+  final double maxWidth;
 
-  const ReadingScreen({super.key, required this.maxWidth});  // Accept maxWidth in the constructor
+  const ReadingScreen({Key? key, required this.maxWidth}) : super(key: key);
 
+  @override
+  _ReadingScreenState createState() => _ReadingScreenState();
+}
+
+class _ReadingScreenState extends State<ReadingScreen> {
+  TextProvider? _textProvider;  // Store a reference to TextProvider
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Get the TextProvider once and store it
+    _textProvider = Provider.of<TextProvider>(context, listen: false);
+  }
+
+  @override
+  void dispose() {
+    // Use the stored reference to stop the reading
+    _textProvider?.stopReading();
+    super.dispose();
+  }
+  
   @override
   Widget build(BuildContext context) {
     final textProvider = Provider.of<TextProvider>(context);
@@ -22,14 +43,14 @@ class ReadingScreen extends StatelessWidget {
               if (textProvider.showReadingLines)
                 Container(
                   height: 2,
-                  width: maxWidth,
+                  width: widget.maxWidth,
                   color: Colors.grey,
                   margin: const EdgeInsets.only(bottom: 10),
                 ),
               // Constrain the width of the text to a max value
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: maxWidth,  // Use the passed maxWidth
+                  maxWidth: widget.maxWidth,  // Use the passed maxWidth
                 ),
                 child: Text(
                   textProvider.currentChunk,
@@ -41,7 +62,7 @@ class ReadingScreen extends StatelessWidget {
               if (textProvider.showReadingLines)
                 Container(
                   height: 2,
-                  width: maxWidth,
+                  width: widget.maxWidth,
                   color: Colors.grey,
                   margin: const EdgeInsets.only(top: 10),
                 ),

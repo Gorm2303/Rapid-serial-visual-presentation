@@ -6,7 +6,7 @@ import 'providers/history_provider.dart';
 import 'routes.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensures platform binding
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -17,18 +17,27 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => TextProvider()),
+        // Initialize HistoryProvider first
+        ChangeNotifierProvider(create: (_) => HistoryProvider()..loadHistory()),
+
+        // Use ProxyProvider to ensure TextProvider is passed HistoryProvider without being recreated unnecessarily
+        ChangeNotifierProxyProvider<HistoryProvider, TextProvider>(
+          create: (context) => TextProvider(Provider.of<HistoryProvider>(context, listen: false)),
+          update: (context, historyProvider, textProvider) {
+            textProvider?.updateHistoryProvider(historyProvider); // Update the existing instance
+            return textProvider ?? TextProvider(historyProvider); // Return the same instance or create one if null
+          },
+        ),
+
+        // SettingsProvider
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => HistoryProvider()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
           return MaterialApp(
             title: 'Rapid Serial Visual Presentation App',
             theme: ThemeData(
-              brightness: settingsProvider.isDarkMode
-                  ? Brightness.dark
-                  : Brightness.light,
+              brightness: settingsProvider.isDarkMode ? Brightness.dark : Brightness.light,
             ),
             initialRoute: AppRoutes.home,
             onGenerateRoute: AppRoutes.generateRoute,

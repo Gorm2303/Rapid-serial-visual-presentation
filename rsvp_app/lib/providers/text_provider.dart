@@ -1,7 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../utils/text_splitter.dart';
 import '../utils/time_calculator.dart';
+import 'history_provider.dart';
+import '../models/history_entry.dart';  // Import HistoryEntry model
+import 'package:flutter/scheduler.dart';  // Import SchedulerBinding
 
 class TextProvider extends ChangeNotifier {
   String _fullText = '';
@@ -14,6 +17,25 @@ class TextProvider extends ChangeNotifier {
   Timer? _timer;  // Timer for automatic reading pace
   bool _isReading = false;  // Tracks if reading is ongoing
   final TextSplitter _textSplitter = TextSplitter();
+
+  HistoryProvider _historyProvider;  // Instance of HistoryProvider
+
+  // Constructor to accept HistoryProvider
+  TextProvider(this._historyProvider);
+
+
+  // Add this method to update HistoryProvider without recreating TextProvider
+  void updateHistoryProvider(HistoryProvider historyProvider) {
+    _historyProvider = historyProvider;
+  }
+
+  // Notify listeners after frame is done rendering to avoid locking issues
+  void _safeNotifyListeners() {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!_isReading) return;  // Ensure reading hasn't stopped
+      notifyListeners();
+    });
+  }
 
   // Getters
   List<String> get textChunks => _textChunks;
@@ -92,7 +114,8 @@ class TextProvider extends ChangeNotifier {
     } else {
       stopReading();  // Stop if repeat is not enabled and we reach the end
     }
-    notifyListeners();
+    _updateHistory();  // Update history after moving to the next chunk
+    _safeNotifyListeners();;
   }
 
   // Method to move to the previous chunk
@@ -100,7 +123,8 @@ class TextProvider extends ChangeNotifier {
     if (_currentChunkIndex > 0) {
       _currentChunkIndex--;
     }
-    notifyListeners();
+    _updateHistory();  // Update history after moving to the previous chunk
+    _safeNotifyListeners();;
   }
 
   // Split the text into chunks based on the words per display
@@ -133,6 +157,7 @@ class TextProvider extends ChangeNotifier {
         // Move to the next chunk or stop if finished
         if (_currentChunkIndex < _textChunks.length - 1) {
           _currentChunkIndex++;
+          
         } else if (_repeatText) {
           _currentChunkIndex = 0;  // Loop back to the first chunk if repeat is enabled
         } else {
@@ -140,21 +165,20 @@ class TextProvider extends ChangeNotifier {
           return;
         }
 
-        notifyListeners();  // Update the UI after every chunk
+        _updateHistory();  // Update history after moving to the next chunk
+        _safeNotifyListeners();;  // Update the UI after every chunk
 
         // Start the timer for the next chunk
         displayNextChunk();
       });
 
       // Immediately notify the listeners to show the current chunk before waiting for the timer
-      notifyListeners();
+      _safeNotifyListeners();;
     }
 
     // Start the first timer and display the first chunk immediately
     displayNextChunk();
   }
-
-
 
   // Restart the timer (called when WPM or words per display changes during reading)
   void _restartTimer() {
@@ -167,6 +191,30 @@ class TextProvider extends ChangeNotifier {
     _isReading = false;
     _timer?.cancel();
     _timer = null;
-    notifyListeners();  // Ensure the UI reflects that reading has stopped
+    _safeNotifyListeners();;  // Ensure the UI reflects that reading has stopped
   }
+
+  // Helper method to update history
+  void _updateHistory() {
+    final firstSentence = _fullText.split('.').first;  // Get the first sentence of the full text
+    final progress = (_currentChunkIndex + 1) / _textChunks.length;
+    final remainingTime = formattedRemainingTime;  // Get the remaining time
+
+    // Add or update the history entry
+    _historyProvider.addOrUpdateHistoryEntry(
+      HistoryEntry(
+        title: 'Reading Session',  // You can modify this to represent the title of the current text
+        firstSentence: firstSentence,
+        progress: progress,
+        timeLeft: remainingTime,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer if it exists
+    super.dispose();  // Always call super.dispose
+  }
+
 }
