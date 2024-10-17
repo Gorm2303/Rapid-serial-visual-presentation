@@ -75,7 +75,6 @@ ReadingText _currentReadingText = ReadingText(
     notifyListeners();  // Notify the UI to update
   }
 
-
   void setCurrentChunkIndexFromPeriod(double progress) {
     // Step 1: Calculate the chunk index based on the progress
     int targetChunkIndex = (progress * _textChunks.length).floor();
@@ -108,7 +107,7 @@ ReadingText _currentReadingText = ReadingText(
 
   // Update words per display
   void setWordsPerDisplay(int wordsCount) {
-    _currentReadingText.wordsPerDisplay = wordsCount;
+    _currentReadingText = _currentReadingText.copyWith(wordsPerDisplay: wordsCount);
     _splitTextIntoChunks();
     if (_isReading) {
       _restartTimer();
@@ -118,7 +117,7 @@ ReadingText _currentReadingText = ReadingText(
 
   // Update WPM
   void setWPM(int newWPM) {
-    _currentReadingText.wpm = newWPM;
+    _currentReadingText = _currentReadingText.copyWith(wpm: newWPM);
     if (_isReading) {
       _restartTimer();
     }
@@ -127,13 +126,13 @@ ReadingText _currentReadingText = ReadingText(
 
   // Toggle reading lines
   void toggleReadingLines(bool value) {
-    _currentReadingText.displayReadingLines = value;
+    _currentReadingText = _currentReadingText.copyWith(displayReadingLines: value);
     notifyListeners();
   }
 
   // Toggle repeat text
   void toggleRepeatText(bool value) {
-    _currentReadingText.repeatText = value;
+    _currentReadingText = _currentReadingText.copyWith(repeatText: value);
     notifyListeners();
   }
 

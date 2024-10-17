@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rsvp_app/providers/history_provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
+import 'package:rsvp_app/screens/home_screen.dart';
 import 'package:rsvp_app/screens/reading_screen.dart';
 import '../widgets/history_tile_widget.dart';
 
@@ -66,6 +67,15 @@ class HistoryScreen extends StatelessWidget {
               );
             },
             onEditText: () {
+              // Navigate to HomeScreen with the current ReadingText
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HomeScreen(
+                    readingText: entry.readingText,  // Pass the ReadingText object to HomeScreen
+                  ),
+                ),
+              );
             },
             onDelete: () {
               historyProvider.deleteHistoryEntry(entry);

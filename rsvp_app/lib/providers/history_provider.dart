@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/history_entry.dart';
-import 'package:rsvp_app/services/storage_service.dart';  // Import the StorageService
+import 'package:rsvp_app/services/storage_service.dart';
 
 class HistoryProvider extends ChangeNotifier {
   final List<HistoryEntry> _history = [];
-  final StorageService _storageService;  // Add a reference to StorageService
+  final StorageService _storageService;
 
   HistoryProvider(this._storageService);
 
@@ -13,24 +13,29 @@ class HistoryProvider extends ChangeNotifier {
 
   // Add or update a history entry
   void addOrUpdateHistoryEntry(HistoryEntry newEntry) {
-    final existingEntryIndex = _history.indexWhere((entry) => entry.readingText.title == newEntry.readingText.title);
+    final existingEntryIndex = _history.indexWhere(
+      (entry) => entry.readingText.textId == newEntry.readingText.textId,
+    );
 
     if (existingEntryIndex != -1) {
       // Update the existing history entry
-      _history[existingEntryIndex].progress = newEntry.progress;
-      _history[existingEntryIndex].timeLeft = newEntry.timeLeft;
+      _history[existingEntryIndex] = HistoryEntry(
+        readingText: newEntry.readingText,  // Replace with the new ReadingText
+        progress: newEntry.progress,
+        timeLeft: newEntry.timeLeft,
+      );
     } else {
       // Add a new history entry
       _history.add(newEntry);
     }
 
-    _saveHistory();  // Save to SharedPreferences or persistent storage
+    _saveHistory();  // Save to persistent storage
     notifyListeners();
   }
 
   // Delete a history entry
   void deleteHistoryEntry(HistoryEntry entry) {
-    _history.removeWhere((e) => e.readingText.title == entry.readingText.title);
+    _history.removeWhere((e) => e.readingText.textId == entry.readingText.textId);
     _saveHistory();  // Save the updated history
     notifyListeners();
   }

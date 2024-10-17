@@ -1,15 +1,18 @@
-import 'dart:convert';
+import 'package:uuid/uuid.dart';  // Add this package to generate unique IDs
 
 class ReadingText {
-  String title;
-  String fullText;
-  int wpm;  // Words per minute setting
-  int wordsPerDisplay;  // Number of words shown per display
-  double maxTextWidth;  // Maximum width for text display
-  bool displayReadingLines;  // Whether to display reading lines
-  bool repeatText;  // Whether to repeat text after reading is complete
+  final String textId;
+  final String title;
+  final String fullText;
+  final int wpm;
+  final int wordsPerDisplay;
+  final double maxTextWidth;
+  final bool displayReadingLines;
+  final bool repeatText;
 
+  // Constructor where textId is automatically generated
   ReadingText({
+    String? textId,  // Optional parameter, auto-generated if not provided
     required this.title,
     required this.fullText,
     required this.wpm,
@@ -17,11 +20,12 @@ class ReadingText {
     required this.maxTextWidth,
     required this.displayReadingLines,
     required this.repeatText,
-  });
+  }) : textId = textId ?? const Uuid().v4();  // Assigns a new UUID if not provided
 
-  // Convert ReadingText to a Map for persistent storage
+  // Convert ReadingText object to a map
   Map<String, dynamic> toMap() {
     return {
+      'textId': textId,
       'title': title,
       'fullText': fullText,
       'wpm': wpm,
@@ -32,9 +36,10 @@ class ReadingText {
     };
   }
 
-  // Create ReadingText from a Map
-  factory ReadingText.fromMap(Map<String, dynamic> map) {
+  // Create ReadingText from a map
+  static ReadingText fromMap(Map<String, dynamic> map) {
     return ReadingText(
+      textId: map['textId'],
       title: map['title'],
       fullText: map['fullText'],
       wpm: map['wpm'],
@@ -45,9 +50,52 @@ class ReadingText {
     );
   }
 
-  // Convert ReadingText to JSON for persistent storage
-  String toJson() => json.encode(toMap());
+  // fromJson and toJson for JSON serialization
+  factory ReadingText.fromJson(Map<String, dynamic> json) {
+    return ReadingText(
+      textId: json['textId'],
+      title: json['title'],
+      fullText: json['fullText'],
+      wpm: json['wpm'],
+      wordsPerDisplay: json['wordsPerDisplay'],
+      maxTextWidth: json['maxTextWidth'],
+      displayReadingLines: json['displayReadingLines'],
+      repeatText: json['repeatText'],
+    );
+  }
 
-  // Create ReadingText from JSON string
-  factory ReadingText.fromJson(String source) => ReadingText.fromMap(json.decode(source));
+  Map<String, dynamic> toJson() {
+    return {
+      'textId': textId,
+      'title': title,
+      'fullText': fullText,
+      'wpm': wpm,
+      'wordsPerDisplay': wordsPerDisplay,
+      'maxTextWidth': maxTextWidth,
+      'displayReadingLines': displayReadingLines,
+      'repeatText': repeatText,
+    };
+  }
+
+  // Method to return a new ReadingText object with updated fields
+  ReadingText copyWith({
+    String? title,
+    String? fullText,
+    int? wpm,
+    int? wordsPerDisplay,
+    double? maxTextWidth,
+    bool? displayReadingLines,
+    bool? repeatText,
+  }) {
+    return ReadingText(
+      textId: textId,
+      title: title ?? this.title,
+      fullText: fullText ?? this.fullText,
+      wpm: wpm ?? this.wpm,
+      wordsPerDisplay: wordsPerDisplay ?? this.wordsPerDisplay,
+      maxTextWidth: maxTextWidth ?? this.maxTextWidth,
+      displayReadingLines: displayReadingLines ?? this.displayReadingLines,
+      repeatText: repeatText ?? this.repeatText,
+    );
+  }
 }
