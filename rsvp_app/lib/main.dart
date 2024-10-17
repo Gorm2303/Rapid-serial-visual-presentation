@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rsvp_app/services/storage_service.dart';
 import 'providers/text_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/history_provider.dart';
@@ -18,7 +19,14 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // Initialize HistoryProvider first
-        ChangeNotifierProvider(create: (_) => HistoryProvider()..loadHistory()),
+        ChangeNotifierProvider(
+          create: (context) {
+            final storageService = StorageService();
+            final historyProvider = HistoryProvider(storageService);
+            historyProvider.loadHistory();  // Load saved history on startup
+            return historyProvider;
+          },
+        ),
 
         // Use ProxyProvider to ensure TextProvider is passed HistoryProvider without being recreated unnecessarily
         ChangeNotifierProxyProvider<HistoryProvider, TextProvider>(

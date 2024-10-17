@@ -148,9 +148,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 ElevatedButton(
                   onPressed: () {
+                    String title = _textController.text.split('\n')[0];
+                    if (title.length < 60) {
+                      title = _textController.text;
+                    } else {
+                      title = _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' ');
+                    }
                     // Create a ReadingText object from the current text in the controller
                     ReadingText readingText = ReadingText(
-                      title: _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' '),  // Replace all whitespace (including newlines) with spaces
+                      title: title,  // Replace all whitespace (including newlines) with spaces
                       fullText: _textController.text,
                       wpm: textProvider.wpm,  // Use the current WPM or a default value
                       wordsPerDisplay: textProvider.wordsPerDisplay,  // Use the current words per display

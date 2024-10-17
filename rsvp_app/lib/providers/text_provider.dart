@@ -11,7 +11,7 @@ class TextProvider extends ChangeNotifier {
 ReadingText _currentReadingText = ReadingText(
     title: '',
     fullText: '',
-    wpm: 300,
+    wpm: 450,
     wordsPerDisplay: 6,
     maxTextWidth: 300,
     displayReadingLines: false,

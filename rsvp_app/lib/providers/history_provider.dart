@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/history_entry.dart';
+import 'package:rsvp_app/services/storage_service.dart';  // Import the StorageService
 
 class HistoryProvider extends ChangeNotifier {
   final List<HistoryEntry> _history = [];
+  final StorageService _storageService;  // Add a reference to StorageService
+
+  HistoryProvider(this._storageService);
 
   // Getter for the history
   List<HistoryEntry> get history => _history;
@@ -39,20 +42,17 @@ class HistoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Save history to SharedPreferences
+  // Save history using StorageService
   Future<void> _saveHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final historyList = _history.map((entry) => entry.toJson()).toList();
-    await prefs.setStringList('reading_history', historyList);
+    await _storageService.saveHistory(_history);  // Use StorageService to save history
   }
 
-  // Load history from SharedPreferences
+  // Load history using StorageService
   Future<void> loadHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final historyList = prefs.getStringList('reading_history') ?? [];
+    final loadedHistory = await _storageService.loadHistory();  // Use StorageService to load history
 
     _history.clear();
-    _history.addAll(historyList.map((entryString) => HistoryEntry.fromJson(entryString)));
+    _history.addAll(loadedHistory);  // Update the in-memory history
     notifyListeners();
   }
 }
