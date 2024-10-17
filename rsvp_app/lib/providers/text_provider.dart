@@ -196,17 +196,19 @@ class TextProvider extends ChangeNotifier {
 
   // Helper method to update history
   void _updateHistory() {
-    final firstSentence = _fullText.split('.').first;  // Get the first sentence of the full text
+    final firstSentence = _fullText.split('.').first.trim();  // Get the first sentence of the full text
     final progress = (_currentChunkIndex + 1) / _textChunks.length;
     final remainingTime = formattedRemainingTime;  // Get the remaining time
 
     // Add or update the history entry
     _historyProvider.addOrUpdateHistoryEntry(
       HistoryEntry(
-        title: 'Reading Session',  // You can modify this to represent the title of the current text
-        firstSentence: firstSentence,
+        title: _fullText.substring(0, 20).replaceAll('\n', ' '),  // Replace new lines with spaces in the title
+        firstSentence: firstSentence.isNotEmpty ? firstSentence : 'No content available',
         progress: progress,
         timeLeft: remainingTime,
+        wpm: _wpm,  // Current Words Per Minute setting
+        fullText: _fullText,  // Save the full text for editing or resuming later
       ),
     );
   }

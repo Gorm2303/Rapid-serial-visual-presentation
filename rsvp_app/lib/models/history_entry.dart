@@ -3,14 +3,18 @@ import 'dart:convert';
 class HistoryEntry {
   final String title;
   final String firstSentence;
-  double progress;  // Make progress mutable so it can be updated
-  String timeLeft;  // Make timeLeft mutable so it can be updated
+  double progress;  // Mutable for tracking reading progress (e.g., percentage complete)
+  String timeLeft;  // Mutable for tracking time left
+  int wpm;  // Words per minute for this reading session
+  String fullText;  // Full text of the history entry
 
   HistoryEntry({
     required this.title,
     required this.firstSentence,
     required this.progress,
     required this.timeLeft,
+    required this.wpm,
+    required this.fullText,
   });
 
   // Convert HistoryEntry to a map
@@ -20,6 +24,8 @@ class HistoryEntry {
       'firstSentence': firstSentence,
       'progress': progress,
       'timeLeft': timeLeft,
+      'wpm': wpm,
+      'fullText': fullText,
     };
   }
 
@@ -30,6 +36,8 @@ class HistoryEntry {
       firstSentence: map['firstSentence'],
       progress: map['progress'].toDouble(),
       timeLeft: map['timeLeft'],
+      wpm: map['wpm'],
+      fullText: map['fullText'],
     );
   }
 

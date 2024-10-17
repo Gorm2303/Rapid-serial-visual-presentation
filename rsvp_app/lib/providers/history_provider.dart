@@ -16,6 +16,7 @@ class HistoryProvider extends ChangeNotifier {
       // Update the existing entry
       _history[existingEntryIndex].progress = newEntry.progress;
       _history[existingEntryIndex].timeLeft = newEntry.timeLeft;
+      _history[existingEntryIndex].wpm = newEntry.wpm;
     } else {
       // Add a new entry
       _history.add(newEntry);
@@ -25,10 +26,10 @@ class HistoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Clear all history
-  void clearHistory() {
-    _history.clear();
-    _saveHistory(); // Update shared preferences
+  // Delete a history entry
+  void deleteHistoryEntry(HistoryEntry entry) {
+    _history.removeWhere((e) => e.title == entry.title);
+    _saveHistory(); // Save the updated history
     notifyListeners();
   }
 
