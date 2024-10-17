@@ -25,6 +25,8 @@ ReadingText _currentReadingText = ReadingText(
   final TextSplitter _textSplitter = TextSplitter();
   late HistoryProvider _historyProvider;
 
+  ReadingText get getCurrentReadingText => _currentReadingText;
+
   // Constructor
   TextProvider(this._historyProvider);
 
@@ -67,6 +69,12 @@ ReadingText _currentReadingText = ReadingText(
     double remainingSeconds = remainingTime * 60;
     return TimeCalculator.formatTime(remainingSeconds);
   }
+  
+  void restartFromBeginning() {
+    _currentChunkIndex = 0;  // Reset to the first chunk
+    notifyListeners();  // Notify the UI to update
+  }
+
 
   void setCurrentChunkIndexFromPeriod(double progress) {
     // Step 1: Calculate the chunk index based on the progress
@@ -94,6 +102,7 @@ ReadingText _currentReadingText = ReadingText(
     _currentReadingText = readingText;
     _splitTextIntoChunks();
     _currentChunkIndex = 0;
+    _updateHistory();  // Update history when setting new reading text
     notifyListeners();
   }
 

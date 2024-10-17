@@ -46,10 +46,26 @@ class HistoryScreen extends StatelessWidget {
               );
             },
             onStartFromBeginning: () {
-              // Implement your logic to restart from the beginning
+              final textProvider = Provider.of<TextProvider>(context, listen: false);
+
+              // Set the stored ReadingText from the HistoryEntry to the TextProvider
+              textProvider.setReadingText(entry.readingText);
+
+              // Reset the current chunk index to the beginning
+              textProvider.restartFromBeginning();  // Reset the chunk index to 0
+
+              // Start reading from the beginning
+              textProvider.startReading();
+
+              // Navigate to ReadingScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ReadingScreen(maxWidth: entry.readingText.maxTextWidth),
+                ),
+              );
             },
             onEditText: () {
-              // Implement your logic to edit text
             },
             onDelete: () {
               historyProvider.deleteHistoryEntry(entry);
