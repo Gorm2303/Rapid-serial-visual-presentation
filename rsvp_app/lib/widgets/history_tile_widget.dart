@@ -19,18 +19,22 @@ class HistoryTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Extract first sentence from the fullText of ReadingText
+    final firstSentence = entry.readingText.fullText.split('.').first;
+
     return ListTile(
-      title: Text(entry.title),
+      title: Text(entry.readingText.title),  // Access the title from ReadingText
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(entry.firstSentence, maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(firstSentence, maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
           LinearProgressIndicator(value: entry.progress),
           const SizedBox(height: 4),
-          Text('${(entry.progress * 100).toStringAsFixed(4)}% complete'),
-          Text('Time Left: ${entry.timeLeft}'),
-        ],),
+          Text('${(entry.progress * 100).toStringAsFixed(2)}% complete'),  // Shorten to 2 decimal places
+          Text('Time Left: ${entry.timeLeft}'),  // Display the time left from HistoryEntry
+        ],
+      ),
       trailing: IconButton(
         icon: const Icon(Icons.more_vert),
         onPressed: () {
@@ -40,6 +44,7 @@ class HistoryTileWidget extends StatelessWidget {
     );
   }
 
+  // Show the settings popup with options for the history entry
   void _showSettingsPopup(BuildContext context) {
     showModalBottomSheet(
       context: context,

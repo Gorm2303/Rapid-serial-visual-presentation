@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/history_entry.dart';  // Import HistoryEntry model
+import '../models/history_entry.dart';
 
 class HistoryProvider extends ChangeNotifier {
   final List<HistoryEntry> _history = [];
@@ -10,26 +10,32 @@ class HistoryProvider extends ChangeNotifier {
 
   // Add or update a history entry
   void addOrUpdateHistoryEntry(HistoryEntry newEntry) {
-    final existingEntryIndex = _history.indexWhere((entry) => entry.title == newEntry.title);
+    final existingEntryIndex = _history.indexWhere((entry) => entry.readingText.title == newEntry.readingText.title);
 
     if (existingEntryIndex != -1) {
-      // Update the existing entry
+      // Update the existing history entry
       _history[existingEntryIndex].progress = newEntry.progress;
       _history[existingEntryIndex].timeLeft = newEntry.timeLeft;
-      _history[existingEntryIndex].wpm = newEntry.wpm;
     } else {
-      // Add a new entry
+      // Add a new history entry
       _history.add(newEntry);
     }
 
-    _saveHistory(); // Save to shared preferences
+    _saveHistory();  // Save to SharedPreferences or persistent storage
     notifyListeners();
   }
 
   // Delete a history entry
   void deleteHistoryEntry(HistoryEntry entry) {
-    _history.removeWhere((e) => e.title == entry.title);
-    _saveHistory(); // Save the updated history
+    _history.removeWhere((e) => e.readingText.title == entry.readingText.title);
+    _saveHistory();  // Save the updated history
+    notifyListeners();
+  }
+
+  // Clear all history
+  void clearHistory() {
+    _history.clear();
+    _saveHistory();  // Save the cleared history
     notifyListeners();
   }
 

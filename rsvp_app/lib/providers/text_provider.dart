@@ -1,138 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:rsvp_app/models/reading_text.dart';
 import 'dart:async';
 import '../utils/text_splitter.dart';
 import '../utils/time_calculator.dart';
 import 'history_provider.dart';
-import '../models/history_entry.dart';  // Import HistoryEntry model
-import 'package:flutter/scheduler.dart';  // Import SchedulerBinding
+import '../models/history_entry.dart';
+import 'package:flutter/scheduler.dart';
 
 class TextProvider extends ChangeNotifier {
-  String _fullText = '';
+ReadingText _currentReadingText = ReadingText(
+    title: '',
+    fullText: '',
+    wpm: 300,
+    wordsPerDisplay: 6,
+    maxTextWidth: 300,
+    displayReadingLines: false,
+    repeatText: false,
+  );
+
   List<String> _textChunks = [];
   int _currentChunkIndex = 0;
-  int _wordsPerDisplay = 3;  // Default words per display
-  int _wpm = 200;  // Default Words Per Minute
-  bool _showReadingLines = false;  // Option for displaying reading lines
-  bool _repeatText = false;  // Option to repeat text when it ends
-  Timer? _timer;  // Timer for automatic reading pace
-  bool _isReading = false;  // Tracks if reading is ongoing
+  Timer? _timer;
+  bool _isReading = false;
   final TextSplitter _textSplitter = TextSplitter();
+  late HistoryProvider _historyProvider;
 
-  HistoryProvider _historyProvider;  // Instance of HistoryProvider
-
-  // Constructor to accept HistoryProvider
+  // Constructor
   TextProvider(this._historyProvider);
 
-
-  // Add this method to update HistoryProvider without recreating TextProvider
+  // Add a method to update the history provider without recreating TextProvider
   void updateHistoryProvider(HistoryProvider historyProvider) {
     _historyProvider = historyProvider;
   }
 
-  // Notify listeners after frame is done rendering to avoid locking issues
+  // Notify listeners safely after rendering
   void _safeNotifyListeners() {
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (!_isReading) return;  // Ensure reading hasn't stopped
       notifyListeners();
     });
   }
 
   // Getters
-  List<String> get textChunks => _textChunks;
   String get currentChunk => _textChunks.isNotEmpty ? _textChunks[_currentChunkIndex] : '';
   int get currentChunkIndex => _currentChunkIndex;
-  int get wordsPerDisplay => _wordsPerDisplay;
-  int get wpm => _wpm;
-  bool get showReadingLines => _showReadingLines;
-  bool get repeatText => _repeatText;
+  int get wordsPerDisplay => _currentReadingText.wordsPerDisplay;
+  int get wpm => _currentReadingText.wpm;
+  bool get repeatText => _currentReadingText.repeatText;
   bool get isReading => _isReading;
+  double get maxTextWidth => _currentReadingText.maxTextWidth;
+  bool get showReadingLines => _currentReadingText.displayReadingLines;
 
-  // Calculate remaining reading time using TimeCalculator
+  // Calculate remaining reading time
   double get remainingTime {
-    int totalWords = _fullText.split(RegExp(r'\s+')).length;  // Total words in the text
+    int totalWords = _currentReadingText.fullText.split(RegExp(r'\s+')).length;
     int currentWordIndex = _calculateCurrentWordIndex();
-    return TimeCalculator.calculateRemainingTime(currentWordIndex, totalWords, _wpm);
+    return TimeCalculator.calculateRemainingTime(currentWordIndex, totalWords, _currentReadingText.wpm);
   }
 
-  // Calculate the time each chunk should be displayed for in seconds
+  // Calculate time each chunk should be displayed for
   double get displayTime {
-    return TimeCalculator.calculateDisplayTime(_wordsPerDisplay, _wpm);
+    return TimeCalculator.calculateDisplayTime(_currentReadingText.wordsPerDisplay, _currentReadingText.wpm);
   }
 
-  // Getter for the formatted remaining time
+  // Formatted remaining time
   String get formattedRemainingTime {
-    double remainingSeconds = remainingTime * 60;  // Convert minutes to seconds
+    double remainingSeconds = remainingTime * 60;
     return TimeCalculator.formatTime(remainingSeconds);
   }
 
-  // Set the full text and split into chunks
-  void setText(String text) {
-    _fullText = text;
+  // Set current ReadingText and split text into chunks
+  void setReadingText(ReadingText readingText) {
+    _currentReadingText = readingText;
     _splitTextIntoChunks();
-    _currentChunkIndex = 0;  // Reset to the first chunk
-    notifyListeners();  // Notify UI to update
+    _currentChunkIndex = 0;
+    notifyListeners();
   }
 
-  // Update words per display (restart the timer)
+  // Update words per display
   void setWordsPerDisplay(int wordsCount) {
-    _wordsPerDisplay = wordsCount;
-    _splitTextIntoChunks();  // Split text into chunks based on the new count
+    _currentReadingText.wordsPerDisplay = wordsCount;
+    _splitTextIntoChunks();
     if (_isReading) {
-      _restartTimer();  // Restart the timer with the updated settings
+      _restartTimer();
     }
     notifyListeners();
   }
 
-  // Update WPM (restart the timer)
+  // Update WPM
   void setWPM(int newWPM) {
-    _wpm = newWPM;
+    _currentReadingText.wpm = newWPM;
     if (_isReading) {
-      _restartTimer();  // Restart the timer with the updated settings
+      _restartTimer();
     }
     notifyListeners();
   }
 
-  // Toggle the visibility of reading lines
+  // Toggle reading lines
   void toggleReadingLines(bool value) {
-    _showReadingLines = value;
+    _currentReadingText.displayReadingLines = value;
     notifyListeners();
   }
 
-  // Toggle the repeat text option
+  // Toggle repeat text
   void toggleRepeatText(bool value) {
-    _repeatText = value;
+    _currentReadingText.repeatText = value;
     notifyListeners();
   }
 
-  // Method to move to the next chunk (with optional repeat logic)
+  // Move to next chunk
   void nextChunk() {
     if (_currentChunkIndex < _textChunks.length - 1) {
       _currentChunkIndex++;
-    } else if (_repeatText) {
-      // If repeat is enabled, go back to the first chunk
-      _currentChunkIndex = 0;
+    } else if (_currentReadingText.repeatText) {
+      _currentChunkIndex = 0;  // Repeat text from the start
     } else {
-      stopReading();  // Stop if repeat is not enabled and we reach the end
+      stopReading();
     }
-    _updateHistory();  // Update history after moving to the next chunk
-    _safeNotifyListeners();;
+    _updateHistory();
+    _safeNotifyListeners();
   }
 
-  // Method to move to the previous chunk
+  // Move to previous chunk
   void previousChunk() {
     if (_currentChunkIndex > 0) {
       _currentChunkIndex--;
     }
-    _updateHistory();  // Update history after moving to the previous chunk
-    _safeNotifyListeners();;
+    _updateHistory();
+    _safeNotifyListeners();
   }
 
-  // Split the text into chunks based on the words per display
+  // Split text into chunks
   void _splitTextIntoChunks() {
-    _textChunks = _textSplitter.splitTextIntoChunks(_fullText, _wordsPerDisplay);
+    _textChunks = _textSplitter.splitTextIntoChunks(_currentReadingText.fullText, _currentReadingText.wordsPerDisplay);
   }
 
-  // Calculate the current word index based on the current chunk
+  // Calculate the current word index based on the chunk
   int _calculateCurrentWordIndex() {
     int wordCount = 0;
     for (int i = 0; i < _currentChunkIndex; i++) {
@@ -141,49 +143,42 @@ class TextProvider extends ChangeNotifier {
     return wordCount;
   }
 
-  // Timer control based on WPM
+  // Start reading timer
   void startReading() {
-    stopReading();  // Stop any existing timers
+    stopReading();  // Ensure existing timers are stopped
 
     _isReading = true;
 
-    // Create a function to handle chunk display and timer recreation
+    // Recursively schedule the next chunk
     void displayNextChunk() {
-      // Dynamically calculate display time for each chunk (in milliseconds)
-      int displayTimeInMillis = (TimeCalculator.calculateDisplayTime(_wordsPerDisplay, _wpm) * 1000).toInt();
+      int displayTimeInMillis = (TimeCalculator.calculateDisplayTime(
+        _currentReadingText.wordsPerDisplay, _currentReadingText.wpm) * 1000).toInt();
 
-      // Start a new timer for the next chunk with the calculated duration (in milliseconds)
       _timer = Timer(Duration(milliseconds: displayTimeInMillis), () {
-        // Move to the next chunk or stop if finished
         if (_currentChunkIndex < _textChunks.length - 1) {
           _currentChunkIndex++;
-          
-        } else if (_repeatText) {
-          _currentChunkIndex = 0;  // Loop back to the first chunk if repeat is enabled
+        } else if (_currentReadingText.repeatText) {
+          _currentChunkIndex = 0;
         } else {
-          stopReading();  // Stop the timer if text ends and repeat is not enabled
+          stopReading();
           return;
         }
-
-        _updateHistory();  // Update history after moving to the next chunk
-        _safeNotifyListeners();;  // Update the UI after every chunk
-
-        // Start the timer for the next chunk
-        displayNextChunk();
+        _updateHistory();
+        _safeNotifyListeners();
+        displayNextChunk();  // Recursively start the next chunk
       });
 
-      // Immediately notify the listeners to show the current chunk before waiting for the timer
-      _safeNotifyListeners();;
+      // Notify listeners to display the current chunk
+      _safeNotifyListeners();
     }
 
-    // Start the first timer and display the first chunk immediately
     displayNextChunk();
   }
 
-  // Restart the timer (called when WPM or words per display changes during reading)
+  // Restart the timer with updated settings
   void _restartTimer() {
-    stopReading();  // Stop the current timer
-    startReading();  // Start a new timer with the updated settings
+    stopReading();  // Stop any existing timers
+    startReading();  // Restart with the updated settings
   }
 
   // Stop reading and cancel the timer
@@ -191,32 +186,26 @@ class TextProvider extends ChangeNotifier {
     _isReading = false;
     _timer?.cancel();
     _timer = null;
-    _safeNotifyListeners();;  // Ensure the UI reflects that reading has stopped
+    _safeNotifyListeners();
   }
 
-  // Helper method to update history
+  // Update history entry
   void _updateHistory() {
-    final firstSentence = _fullText.split('.').first.trim();  // Get the first sentence of the full text
     final progress = (_currentChunkIndex + 1) / _textChunks.length;
-    final remainingTime = formattedRemainingTime;  // Get the remaining time
+    final remainingTime = formattedRemainingTime;
 
-    // Add or update the history entry
     _historyProvider.addOrUpdateHistoryEntry(
       HistoryEntry(
-        title: _fullText.substring(0, 20).replaceAll('\n', ' '),  // Replace new lines with spaces in the title
-        firstSentence: firstSentence.isNotEmpty ? firstSentence : 'No content available',
+        readingText: _currentReadingText,
         progress: progress,
         timeLeft: remainingTime,
-        wpm: _wpm,  // Current Words Per Minute setting
-        fullText: _fullText,  // Save the full text for editing or resuming later
       ),
     );
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer if it exists
-    super.dispose();  // Always call super.dispose
+    _timer?.cancel();  // Ensure the timer is canceled
+    super.dispose();
   }
-
 }

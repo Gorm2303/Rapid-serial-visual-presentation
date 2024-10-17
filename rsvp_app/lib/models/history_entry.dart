@@ -1,49 +1,38 @@
 import 'dart:convert';
+import 'reading_text.dart';
 
 class HistoryEntry {
-  final String title;
-  final String firstSentence;
-  double progress;  // Mutable for tracking reading progress (e.g., percentage complete)
-  String timeLeft;  // Mutable for tracking time left
-  int wpm;  // Words per minute for this reading session
-  String fullText;  // Full text of the history entry
+  final ReadingText readingText;  // Reference to the ReadingText being read
+  double progress;  // Reading progress as a percentage
+  String timeLeft;  // Time left for the session
 
   HistoryEntry({
-    required this.title,
-    required this.firstSentence,
+    required this.readingText,
     required this.progress,
     required this.timeLeft,
-    required this.wpm,
-    required this.fullText,
   });
 
-  // Convert HistoryEntry to a map
+  // Convert HistoryEntry to a Map for persistent storage
   Map<String, dynamic> toMap() {
     return {
-      'title': title,
-      'firstSentence': firstSentence,
+      'readingText': readingText.toMap(),
       'progress': progress,
       'timeLeft': timeLeft,
-      'wpm': wpm,
-      'fullText': fullText,
     };
   }
 
-  // Create a HistoryEntry from a map
+  // Create HistoryEntry from a Map
   factory HistoryEntry.fromMap(Map<String, dynamic> map) {
     return HistoryEntry(
-      title: map['title'],
-      firstSentence: map['firstSentence'],
+      readingText: ReadingText.fromMap(map['readingText']),
       progress: map['progress'].toDouble(),
       timeLeft: map['timeLeft'],
-      wpm: map['wpm'],
-      fullText: map['fullText'],
     );
   }
 
-  // Convert HistoryEntry to a JSON string
+  // Convert HistoryEntry to JSON for persistent storage
   String toJson() => json.encode(toMap());
 
-  // Create a HistoryEntry from a JSON string
+  // Create HistoryEntry from JSON string
   factory HistoryEntry.fromJson(String source) => HistoryEntry.fromMap(json.decode(source));
 }

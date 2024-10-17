@@ -5,7 +5,7 @@ import 'package:rsvp_app/providers/text_provider.dart';
 class ReadingScreen extends StatefulWidget {
   final double maxWidth;
 
-  const ReadingScreen({Key? key, required this.maxWidth}) : super(key: key);
+  const ReadingScreen({super.key, required this.maxWidth});
 
   @override
   _ReadingScreenState createState() => _ReadingScreenState();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rsvp_app/models/reading_text.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
 import 'package:rsvp_app/screens/reading_screen.dart';
 import '../widgets/text_input_widget.dart';
@@ -116,13 +117,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     String? fileContent = await _fileService.pickTextFile();
                     if (fileContent != null) {
                       _textController.text = fileContent;
-                      textProvider.setText(fileContent); // Set the text in the provider
+                      
+                      // Create a ReadingText object with default or required settings
+                      ReadingText readingText = ReadingText(
+                        title: 'Uploaded Text',  // You can modify this to represent the title of the text
+                        fullText: fileContent,
+                        wpm: textProvider.wpm,  // Get the current WPM from provider or use a default value
+                        wordsPerDisplay: textProvider.wordsPerDisplay,  // Use current or default value
+                        maxTextWidth: 300,  // Set a default or user-defined max text width
+                        displayReadingLines: textProvider.showReadingLines,  // Use the current setting
+                        repeatText: textProvider.repeatText,  // Use the current setting
+                      );
+
+                      textProvider.setReadingText(readingText); // Pass the ReadingText object
                     }
                   },
                   child: const Text('Upload Text File'),
                 ),
                 
                 const SizedBox(height: 8),
+
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/history');
@@ -131,10 +145,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 
                 const SizedBox(height: 8),
+                
                 ElevatedButton(
                   onPressed: () {
-                    textProvider.setText(_textController.text);
+                    // Create a ReadingText object from the current text in the controller
+                    ReadingText readingText = ReadingText(
+                      title: _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' '),  // Replace all whitespace (including newlines) with spaces
+                      fullText: _textController.text,
+                      wpm: textProvider.wpm,  // Use the current WPM or a default value
+                      wordsPerDisplay: textProvider.wordsPerDisplay,  // Use the current words per display
+                      maxTextWidth: _maxTextWidth,  // Use the current max text width
+                      displayReadingLines: textProvider.showReadingLines,  // Use the current setting
+                      repeatText: textProvider.repeatText,  // Use the current setting
+                    );
+
+                    textProvider.setReadingText(readingText);  // Pass the ReadingText object
                     textProvider.startReading();  // Start the reading session
+                    
                     Navigator.push(
                       context,
                       MaterialPageRoute(
