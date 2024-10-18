@@ -8,7 +8,6 @@ import '../services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
 
 class HomeScreen extends StatefulWidget {
-  // Add a ReadingText argument to receive it from other screens (like HistoryScreen)
   final ReadingText? readingText;
 
   const HomeScreen({super.key, this.readingText});
@@ -18,20 +17,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late TextEditingController _textController;  // No longer final, to be updated with the passed text
+  late TextEditingController _textController;
   final FileService _fileService = FileService();
   double _maxTextWidth = 300;  // Default value for maxWidth
+
+  ReadingText? _editingReadingText;  // This will hold the state for readingText
 
   @override
   void initState() {
     super.initState();
-    // Initialize the TextController with the passed reading text or empty string if null
+    // Set initial text and maxWidth from widget.readingText or defaults
+    _editingReadingText = widget.readingText;  // Manage the mutable readingText state here
     _textController = TextEditingController(
-      text: widget.readingText?.fullText ?? '',
+      text: _editingReadingText?.fullText ?? '',
     );
-
-    // Initialize maxTextWidth with passed value or a default one
-    _maxTextWidth = widget.readingText?.maxTextWidth ?? 300;
+    _maxTextWidth = _editingReadingText?.maxTextWidth ?? 300;
   }
 
   @override
@@ -123,18 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     String? fileContent = await _fileService.pickTextFile();
                     if (fileContent != null) {
                       _textController.text = fileContent;
-
-                      ReadingText readingText = ReadingText(
-                        title: 'Uploaded Text',
-                        fullText: fileContent,
-                        wpm: textProvider.wpm,
-                        wordsPerDisplay: textProvider.wordsPerDisplay,
-                        maxTextWidth: 300,
-                        displayReadingLines: textProvider.showReadingLines,
-                        repeatText: textProvider.repeatText,
-                      );
-
-                      textProvider.setReadingText(readingText);
                     }
                   },
                   child: const Text('Upload Text File'),
@@ -162,21 +150,41 @@ class _HomeScreenState extends State<HomeScreen> {
                           .replaceAll(RegExp(r'\s+'), ' ');
                     }
 
-                    // Create a new ReadingText object based on the current one using the copyWith method
-                    ReadingText currentReadingText = widget.readingText!.copyWith(
-                      title: title,
-                      fullText: _textController.text,
-                      wpm: textProvider.wpm,
-                      wordsPerDisplay: textProvider.wordsPerDisplay,
-                      maxTextWidth: _maxTextWidth,
-                      displayReadingLines: textProvider.showReadingLines,
-                      repeatText: textProvider.repeatText,
-                    );
+                    ReadingText readingText;
 
-                    // Update the TextProvider with the edited ReadingText
-                    textProvider.setReadingText(currentReadingText);
+                    // Check if we are editing an existing ReadingText or creating a new one
+                    if (_editingReadingText != null) {
+                      // If editing, use copyWith to retain the original data and update necessary fields
+                      readingText = _editingReadingText!.copyWith(
+                        title: title,
+                        fullText: _textController.text,
+                        wpm: textProvider.wpm,
+                        wordsPerDisplay: textProvider.wordsPerDisplay,
+                        maxTextWidth: _maxTextWidth,
+                        displayReadingLines: textProvider.showReadingLines,
+                        repeatText: textProvider.repeatText,
+                      );
+                    } else {
+                      // Create a new ReadingText if not editing
+                      readingText = ReadingText(
+                        title: title,
+                        fullText: _textController.text,
+                        wpm: textProvider.wpm,
+                        wordsPerDisplay: textProvider.wordsPerDisplay,
+                        maxTextWidth: _maxTextWidth,
+                        displayReadingLines: textProvider.showReadingLines,
+                        repeatText: textProvider.repeatText,
+                      );
+                    }
+
+                    textProvider.setReadingText(readingText);
                     textProvider.startReading();
-                    _textController.clear();  // Clear the text field after starting reading
+
+                    // Clear the editing state and text field after reading starts
+                    setState(() {
+                      _editingReadingText = null;  // Clear the editing state
+                    });
+                    _textController.clear();  // Clear the text field
 
                     // Navigate to the ReadingScreen
                     Navigator.push(
