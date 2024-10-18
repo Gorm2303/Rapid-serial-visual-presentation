@@ -64,6 +64,7 @@ class _WPMSliderWidgetState extends State<WPMSliderWidget> {
                 controller: _wpmController,
                 decoration: const InputDecoration(
                   labelText: "WPM",
+                  contentPadding: EdgeInsets.zero,  // Reduced padding inside the TextField
                 ),
                 onSubmitted: (String value) {
                   final int? newWpm = int.tryParse(value);

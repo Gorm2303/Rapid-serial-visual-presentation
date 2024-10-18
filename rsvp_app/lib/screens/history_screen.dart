@@ -32,10 +32,15 @@ class HistoryScreen extends StatelessWidget {
               // Set the stored ReadingText from the HistoryEntry to the TextProvider
               textProvider.setReadingText(entry.readingText);
 
-              // Set the reading progress to continue from where it left off
-              textProvider.setCurrentChunkIndexFromPeriod(entry.progress);
+              // If progress is 100% or more, restart from the beginning
+              if (entry.progress >= 1.0) {
+                textProvider.restartFromBeginning();
+              } else {
+                // Otherwise, set the reading progress to continue from where it left off
+                textProvider.setCurrentChunkIndexFromPeriod(entry.progress);
+              }
 
-              // Start reading from where it left off
+              // Start reading
               textProvider.startReading();
 
               // Navigate to the ReadingScreen

@@ -143,28 +143,6 @@ ReadingText _currentReadingText = ReadingText(
     notifyListeners();
   }
 
-  // Move to next chunk
-  void nextChunk() {
-    if (_currentChunkIndex < _textChunks.length - 1) {
-      _currentChunkIndex++;
-    } else if (_currentReadingText.repeatText) {
-      _currentChunkIndex = 0;  // Repeat text from the start
-    } else {
-      stopReading();
-    }
-    _updateHistory();
-    _safeNotifyListeners();
-  }
-
-  // Move to previous chunk
-  void previousChunk() {
-    if (_currentChunkIndex > 0) {
-      _currentChunkIndex--;
-    }
-    _updateHistory();
-    _safeNotifyListeners();
-  }
-
   // Split text into chunks
   void _splitTextIntoChunks() {
     _textChunks = _textSplitter.splitTextIntoChunks(_currentReadingText.fullText, _currentReadingText.wordsPerDisplay);
