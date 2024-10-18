@@ -51,6 +51,7 @@ class _WPMSliderWidgetState extends State<WPMSliderWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final textDisplayDuration = _wordsPerDisplay / (_wpm / 60);  // Dynamically compute the text display duration
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,7 +97,13 @@ class _WPMSliderWidgetState extends State<WPMSliderWidget> {
           ],
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
+
+        Text(
+          'Text Display Duration: ${textDisplayDuration.toStringAsFixed(2)} seconds',
+          style: const TextStyle(fontSize: 14, color: Colors.black54),),
+          
+        const SizedBox(height: 8),
 
         // Words Per Display Slider
         Text("Words Per Display: $_wordsPerDisplay", style: const TextStyle(fontSize: 16)),

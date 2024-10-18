@@ -72,8 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildDisplaySettings(),
                 _buildCheckBoxes(),
                 _buildFileUploadButton(),
-                _buildHistoryButton(),
-                _buildStartReadingButton(),
+              _buildHistoryOrCancelButton(), // History or cancel button
+                _buildStartOrSaveButton(),  // Conditional start or save button
               ],
             ),
           ),
@@ -151,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   // Checkboxes for display settings
   Widget _buildCheckBoxes() {
     return Column(
@@ -203,22 +204,60 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Navigate to history button
-  Widget _buildHistoryButton() {
+  // History or cancel button
+  Widget _buildHistoryOrCancelButton() {
     return ElevatedButton(
-      onPressed: () {
-        Navigator.pushNamed(context, '/history');
-      },
-      child: const Text('Go to History Screen'),
+      onPressed: _editingReadingText != null ? _handleCancelChanges : _goToHistoryScreen,
+      child: Text(_editingReadingText != null ? 'Cancel Changes' : 'Go to History Screen'),
     );
   }
 
-  // Start reading button
-  Widget _buildStartReadingButton() {
+  void _handleCancelChanges() {
+    // Just pop the screen without saving changes
+    Navigator.pop(context);
+  }
+
+  void _goToHistoryScreen() {
+    Navigator.pushNamed(context, '/history');
+  }
+
+  // Start reading or save text button
+  Widget _buildStartOrSaveButton() {
     return ElevatedButton(
-      onPressed: _handleStartReading,
-      child: const Text('Start Reading'),
+      onPressed: _editingReadingText != null ? _handleSaveText : _handleStartReading,
+      child: Text(_editingReadingText != null ? 'Save Text' : 'Start Reading'),
     );
+  }
+
+  void _handleSaveText() {
+    if (_textController.text.isEmpty) return;
+
+    final title = _titleController.text.isNotEmpty
+        ? _titleController.text
+        : (_textController.text.length < 60
+            ? _textController.text
+            : _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' '));
+
+    // Update the existing ReadingText
+    ReadingText updatedReadingText = _editingReadingText!.copyWith(
+      title: title,
+      fullText: _textController.text,
+      wpm: _wpm,
+      wordsPerDisplay: _wordsPerDisplay,
+      maxTextWidth: _maxTextWidth,
+      displayReadingLines: _displayReadingLines,
+      repeatText: _repeatText,
+      displayProgressBar: _displayProgressBar,
+      displayTimeLeft: _displayTimeLeft,
+    );
+
+    final textProvider = Provider.of<TextProvider>(context, listen: false);
+    textProvider.setReadingText(updatedReadingText);
+
+    _clearFields();
+
+    // Navigate back to the history screen or wherever necessary
+    Navigator.pop(context);
   }
 
   void _handleStartReading() {
