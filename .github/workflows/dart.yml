@@ -1,0 +1,37 @@
+name: Deploy Flutter App to Oracle Cloud VM
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.14.0
+
+        # Use the webfactory/ssh-agent action to add the SSH key
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install Flutter dependencies
+        run: |
+          cd rsvp_app  # Navigate to the fire_app directory
+          flutter pub get  # Install the dependencies
+      - name: Build Flutter Web
+        run: |
+          cd rsvp_app  # Navigate to the fire_app directory
+          flutter build web  # Build the web app
+      - name: Deploy to Oracle Cloud VM
+        run: |
+          tar -czf /tmp/build.tar.gz -C rsvp_app/build/web .  # Archive the build files
+          scp -o StrictHostKeyChecking=no /tmp/build.tar.gz opc@${{ secrets.ORACLE_IP }}:/tmp/
+          ssh opc@${{ secrets.ORACLE_IP }} 'sudo tar -xzf /tmp/build.tar.gz -C /usr/share/nginx/html/read && sudo systemctl restart nginx'
