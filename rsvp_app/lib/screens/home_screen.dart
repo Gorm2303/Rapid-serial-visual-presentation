@@ -19,19 +19,31 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late TextEditingController _textController;
   final FileService _fileService = FileService();
+  
   double _maxTextWidth = 300;  // Default value for maxWidth
+  int _wpm = 200;  // Default Words Per Minute
+  int _wordsPerDisplay = 3;  // Default Words Per Display
+  bool _displayReadingLines = false;  // Default Display Reading Lines
+  bool _repeatText = false;  // Default Repeat Text
 
   ReadingText? _editingReadingText;  // This will hold the state for readingText
 
   @override
   void initState() {
     super.initState();
+
     // Set initial text and maxWidth from widget.readingText or defaults
     _editingReadingText = widget.readingText;  // Manage the mutable readingText state here
     _textController = TextEditingController(
       text: _editingReadingText?.fullText ?? '',
     );
+    
+    // Initialize settings from readingText or use default values
     _maxTextWidth = _editingReadingText?.maxTextWidth ?? 300;
+    _wpm = _editingReadingText?.wpm ?? 200;
+    _wordsPerDisplay = _editingReadingText?.wordsPerDisplay ?? 3;
+    _displayReadingLines = _editingReadingText?.displayReadingLines ?? false;
+    _repeatText = _editingReadingText?.repeatText ?? false;
   }
 
   @override
@@ -58,13 +70,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
 
                 WPMSliderWidget(
-                  initialWpm: textProvider.wpm,
-                  initialWordsPerDisplay: textProvider.wordsPerDisplay,
+                  initialWpm: _wpm,  // Use local variable instead of textProvider
+                  initialWordsPerDisplay: _wordsPerDisplay,  // Use local variable instead of textProvider
                   onWPMChanged: (newWPM) {
-                    textProvider.setWPM(newWPM);
+                    setState(() {
+                      _wpm = newWPM;
+                    });
                   },
                   onWordsPerDisplayChanged: (newWordsCount) {
-                    textProvider.setWordsPerDisplay(newWordsCount);
+                    setState(() {
+                      _wordsPerDisplay = newWordsCount;
+                    });
                   },
                 ),
 
@@ -100,20 +116,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 CheckboxListTile(
                   title: const Text('Display Reading Lines'),
-                  value: textProvider.showReadingLines,
+                  value: _displayReadingLines,  // Use local variable
                   onChanged: (bool? value) {
                     if (value != null) {
-                      textProvider.toggleReadingLines(value);
+                      setState(() {
+                        _displayReadingLines = value;
+                      });
                     }
                   },
                 ),
 
                 CheckboxListTile(
                   title: const Text('Repeat Text'),
-                  value: textProvider.repeatText,
+                  value: _repeatText,  // Use local variable
                   onChanged: (bool? value) {
                     if (value != null) {
-                      textProvider.toggleRepeatText(value);
+                      setState(() {
+                        _repeatText = value;
+                      });
                     }
                   },
                 ),
@@ -154,26 +174,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // Check if we are editing an existing ReadingText or creating a new one
                     if (_editingReadingText != null) {
-                      // If editing, use copyWith to retain the original data and update necessary fields
                       readingText = _editingReadingText!.copyWith(
                         title: title,
                         fullText: _textController.text,
-                        wpm: textProvider.wpm,
-                        wordsPerDisplay: textProvider.wordsPerDisplay,
+                        wpm: _wpm,  // Use local variable instead of textProvider
+                        wordsPerDisplay: _wordsPerDisplay,  // Use local variable
                         maxTextWidth: _maxTextWidth,
-                        displayReadingLines: textProvider.showReadingLines,
-                        repeatText: textProvider.repeatText,
+                        displayReadingLines: _displayReadingLines,  // Use local variable
+                        repeatText: _repeatText,  // Use local variable
                       );
                     } else {
                       // Create a new ReadingText if not editing
                       readingText = ReadingText(
                         title: title,
                         fullText: _textController.text,
-                        wpm: textProvider.wpm,
-                        wordsPerDisplay: textProvider.wordsPerDisplay,
+                        wpm: _wpm,  // Use local variable instead of textProvider
+                        wordsPerDisplay: _wordsPerDisplay,  // Use local variable
                         maxTextWidth: _maxTextWidth,
-                        displayReadingLines: textProvider.showReadingLines,
-                        repeatText: textProvider.repeatText,
+                        displayReadingLines: _displayReadingLines,  // Use local variable
+                        repeatText: _repeatText,  // Use local variable
                       );
                     }
 
@@ -182,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     // Clear the editing state and text field after reading starts
                     setState(() {
-                      _editingReadingText = null;  // Clear the editing state
+                      _editingReadingText = null;
                     });
                     _textController.clear();  // Clear the text field
 
