@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rsvp_app/models/reading_text.dart';
+import 'package:rsvp_app/providers/history_provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
+import 'package:rsvp_app/screens/history_screen.dart';
 import 'package:rsvp_app/screens/reading_screen.dart';
+import 'package:rsvp_app/widgets/history_tile_widget.dart';
 import 'package:rsvp_app/widgets/text_input_widget.dart';
 import '../services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
@@ -56,29 +59,73 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Reading Speed App')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTitleInput(),
-                _buildTextInput(),
-                _buildWPMSlider(),
-                _buildDisplaySettings(),
-                _buildCheckBoxes(),
-                _buildFileUploadButton(),
-              _buildHistoryOrCancelButton(), // History or cancel button
-                _buildStartOrSaveButton(),  // Conditional start or save button
-              ],
-            ),
+    if (_editingReadingText != null) {
+      // When editing a text, hide the TabBar and show only the HomeScreen
+      return Scaffold(
+        appBar: AppBar(title: const Text('Edit Text')),
+        body: _buildAddTextTab(),  // Directly show the add text tab for editing
+      );
+    }
+
+    // Show TabBar when not editing
+    return DefaultTabController(
+      length: 3,  // Three tabs
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Reading Speed App'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Add Text'),  // First tab
+              Tab(text: 'History'),   // Second tab
+              Tab(text: 'Settings'),  // Third tab
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildAddTextTab(),   // First tab's content
+            _buildHistoryTab(),   // Second tab's content
+            _buildSettingsTab(),  // Third tab's content
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Tab for adding text
+  Widget _buildAddTextTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTitleInput(),
+              _buildTextInput(),
+              _buildFileUploadButton(),
+              const SizedBox(height: 10),
+              _buildWPMSlider(),
+              _buildDisplaySettings(),
+              _buildCheckBoxes(),
+              _buildHistoryOrCancelButton(),
+              _buildStartOrSaveButton(),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHistoryTab() {
+    return const HistoryScreen(); // Replace with the new HistoryScreen class
+  }
+
+  // Tab for settings
+  Widget _buildSettingsTab() {
+    return const Center(
+      child: Text('Settings Tab - Add your settings here'),
     );
   }
 
@@ -193,23 +240,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // File upload button
   Widget _buildFileUploadButton() {
-    return ElevatedButton(
-      onPressed: () async {
-        String? fileContent = await _fileService.pickTextFile();
-        if (fileContent != null) {
-          _textController.text = fileContent;
-        }
-      },
-      child: const Text('Upload Text File'),
+    return SizedBox(
+      height: 35,  // Set a larger height
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () async {
+          String? fileContent = await _fileService.pickTextFile();
+          if (fileContent != null) {
+            _textController.text = fileContent;
+          }
+        },
+      child: const Text('Upload Text'),
+      ),
     );
   }
 
   // History or cancel button
   Widget _buildHistoryOrCancelButton() {
-    return ElevatedButton(
-      onPressed: _editingReadingText != null ? _handleCancelChanges : _goToHistoryScreen,
-      child: Text(_editingReadingText != null ? 'Cancel Changes' : 'Go to History Screen'),
-    );
+    return _editingReadingText != null ? SizedBox(
+      height: 40,  // Set a larger height
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _editingReadingText != null ? _handleCancelChanges : _goToHistoryScreen,
+        child: const Text(
+          'Cancel',
+          style: TextStyle(fontSize: 18),  // Increase text size slightly  
+          ),
+      ),
+    ) : const SizedBox(height: 0);
   }
 
   void _handleCancelChanges() {
@@ -221,44 +279,55 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(context, '/history');
   }
 
-  // Start reading or save text button
+  // Start reading or save text button with increased size
   Widget _buildStartOrSaveButton() {
-    return ElevatedButton(
-      onPressed: _editingReadingText != null ? _handleSaveText : _handleStartReading,
-      child: Text(_editingReadingText != null ? 'Save Text' : 'Start Reading'),
+    return SizedBox(
+      height: 50,  // Set a larger height
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _editingReadingText != null ? _handleSaveText : _handleStartReading,
+        child: Text(
+          _editingReadingText != null ? 'Save' : 'Start Reading',
+          style: const TextStyle(fontSize: 18),  // Increase text size slightly
+        ),
+      ),
     );
   }
 
   void _handleSaveText() {
     if (_textController.text.isEmpty) return;
 
-    final title = _titleController.text.isNotEmpty
-        ? _titleController.text
-        : (_textController.text.length < 60
-            ? _textController.text
-            : _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' '));
-
-    // Update the existing ReadingText
-    ReadingText updatedReadingText = _editingReadingText!.copyWith(
-      title: title,
-      fullText: _textController.text,
-      wpm: _wpm,
-      wordsPerDisplay: _wordsPerDisplay,
-      maxTextWidth: _maxTextWidth,
-      displayReadingLines: _displayReadingLines,
-      repeatText: _repeatText,
-      displayProgressBar: _displayProgressBar,
-      displayTimeLeft: _displayTimeLeft,
-    );
-
-    final textProvider = Provider.of<TextProvider>(context, listen: false);
-    textProvider.setReadingText(updatedReadingText);
-
-    _clearFields();
-
-    // Navigate back to the history screen or wherever necessary
+    // Navigate back to the previous screen (e.g., History screen)
     Navigator.pop(context);
+
+    // After navigating, process the text saving logic
+    Future.delayed(const Duration(milliseconds: 100), () {
+      final title = _titleController.text.isNotEmpty
+          ? _titleController.text
+          : (_textController.text.length < 60
+              ? _textController.text
+              : _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' '));
+
+      // Update the existing ReadingText
+      ReadingText updatedReadingText = _editingReadingText!.copyWith(
+        title: title,
+        fullText: _textController.text,
+        wpm: _wpm,
+        wordsPerDisplay: _wordsPerDisplay,
+        maxTextWidth: _maxTextWidth,
+        displayReadingLines: _displayReadingLines,
+        repeatText: _repeatText,
+        displayProgressBar: _displayProgressBar,
+        displayTimeLeft: _displayTimeLeft,
+      );
+
+      final textProvider = Provider.of<TextProvider>(context, listen: false);
+      textProvider.setReadingText(updatedReadingText);
+
+      _clearFields();  // Reset the UI state
+    });
   }
+
 
   void _handleStartReading() {
     if (_textController.text.isEmpty) return;

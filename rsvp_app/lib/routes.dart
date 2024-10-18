@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/history_screen.dart';
 import 'screens/reading_screen.dart';
 
 class AppRoutes {
@@ -12,8 +11,6 @@ class AppRoutes {
     switch (settings.name) {
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-      case history:
-        return MaterialPageRoute(builder: (_) => const HistoryScreen());
       case reading:
         return MaterialPageRoute(builder: (_) => const ReadingScreen(maxWidth: 300,));
       default:
