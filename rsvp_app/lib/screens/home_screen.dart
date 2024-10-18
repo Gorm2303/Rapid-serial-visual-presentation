@@ -100,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildWPMSlider(),
               _buildDisplaySettings(),
               _buildCancelButton(),
+              const SizedBox(height: 16),
               _buildStartOrSaveButton(),
             ],
           ),
@@ -246,6 +247,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // After navigating, process the text saving logic
     Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return; // Check if the widget is still mounted
+
       final title = _titleController.text.isNotEmpty
           ? _titleController.text
           : (_textController.text.length < 60
@@ -261,12 +264,14 @@ class _HomeScreenState extends State<HomeScreen> {
         maxTextWidth: _maxTextWidth,
       );
 
+      // Only use context if the widget is still mounted
       final textProvider = Provider.of<TextProvider>(context, listen: false);
       textProvider.setReadingText(updatedReadingText);
 
       _clearFields();  // Reset the UI state
     });
   }
+
 
 
   void _handleStartReading() {

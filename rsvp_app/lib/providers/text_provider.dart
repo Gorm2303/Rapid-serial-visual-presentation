@@ -55,7 +55,7 @@ ReadingText _currentReadingText = ReadingText(
 
   // Calculate progress
   double get progress {
-    return (_currentChunkIndex + 1) / _textChunks.length;
+    return ((_currentChunkIndex + 1) / _textChunks.length) >= 1 ? 1.0 : ((_currentChunkIndex + 1) / _textChunks.length);
   }
 
   // Calculate remaining reading time
@@ -104,30 +104,42 @@ ReadingText _currentReadingText = ReadingText(
 
   // Set current ReadingText and split text into chunks
   void setReadingText(ReadingText readingText) {
+    // Step 1: Calculate how many words have been read before changing the reading text
+    int wordsRead = _calculateWordsRead();
+
+    // Step 2: Set the new reading text
     _currentReadingText = readingText;
+
+    // Step 3: Split the new text into chunks based on the current wordsPerDisplay
     _splitTextIntoChunks();
-    _currentChunkIndex = 0;
+
+    // Step 4: Recalculate the chunk index based on the number of words read
+    int cumulativeWords = 0;
+    for (int i = 0; i < _textChunks.length; i++) {
+      cumulativeWords += _textChunks[i].split(RegExp(r'\s+')).length;
+      if (cumulativeWords >= wordsRead) {
+        _currentChunkIndex = i;
+        break;
+      }
+    }
+
+    // Ensure the new index doesn't exceed the bounds of the new chunks
+    if (_currentChunkIndex >= _textChunks.length) {
+      _currentChunkIndex = _textChunks.length - 1;
+    }
+
+    // Step 5: Update the history with the new reading text and progress
     _updateHistory();  // Update history when setting new reading text
-    notifyListeners();
+    notifyListeners();  // Notify UI of changes
   }
 
-  // Update words per display
-  void setWordsPerDisplay(int wordsCount) {
-    _currentReadingText = _currentReadingText.copyWith(wordsPerDisplay: wordsCount);
-    _splitTextIntoChunks();
-    if (_isReading) {
-      _restartTimer();
+  // Calculate the number of words read so far based on the current chunk index
+  int _calculateWordsRead() {
+    int wordsRead = 0;
+    for (int i = 0; i < _currentChunkIndex; i++) {
+      wordsRead += _textChunks[i].split(RegExp(r'\s+')).length;
     }
-    notifyListeners();
-  }
-
-  // Update WPM
-  void setWPM(int newWPM) {
-    _currentReadingText = _currentReadingText.copyWith(wpm: newWPM);
-    if (_isReading) {
-      _restartTimer();
-    }
-    notifyListeners();
+    return wordsRead;
   }
 
   // Split text into chunks
@@ -137,6 +149,10 @@ ReadingText _currentReadingText = ReadingText(
 
   // Calculate the current word index based on the chunk
   int _calculateCurrentWordIndex() {
+    if (_textChunks.isEmpty || _currentChunkIndex >= _textChunks.length) {
+      return 0; // Return 0 if no text chunks are available or index exceeds bounds
+    }
+
     int wordCount = 0;
     for (int i = 0; i < _currentChunkIndex; i++) {
       wordCount += _textChunks[i].split(RegExp(r'\s+')).length;
@@ -174,12 +190,6 @@ ReadingText _currentReadingText = ReadingText(
     }
 
     displayNextChunk();
-  }
-
-  // Restart the timer with updated settings
-  void _restartTimer() {
-    stopReading();  // Stop any existing timers
-    startReading();  // Restart with the updated settings
   }
 
   // Stop reading and cancel the timer
