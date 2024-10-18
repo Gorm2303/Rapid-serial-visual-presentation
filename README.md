@@ -1,1 +1,1 @@
-# Rapid-serial-visual-presentation
+# Rapid-serial-visual-presentation-app
