@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rsvp_app/models/reading_text.dart';
 import 'package:rsvp_app/providers/history_provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
 import 'package:rsvp_app/screens/home_screen.dart';

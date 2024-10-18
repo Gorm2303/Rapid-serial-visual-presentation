@@ -36,7 +36,9 @@ class _ReadingScreenState extends State<ReadingScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
-          child: ReadingWidget(maxWidth: widget.maxWidth),  // Use the new ReadingWidget
+          child: ReadingWidget(
+            maxWidth: widget.maxWidth,  // Pass maxWidth
+          ),  // Use the updated ReadingWidget that accepts these parameters
         ),
       ),
     );

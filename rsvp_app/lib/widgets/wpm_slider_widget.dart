@@ -101,8 +101,8 @@ class _WPMSliderWidgetState extends State<WPMSliderWidget> {
 
         Text(
           'Text Display Duration: ${textDisplayDuration.toStringAsFixed(2)} seconds',
-          style: const TextStyle(fontSize: 14, color: Colors.black54),),
-          
+          style: const TextStyle(fontSize: 14),),
+
         const SizedBox(height: 8),
 
         // Words Per Display Slider

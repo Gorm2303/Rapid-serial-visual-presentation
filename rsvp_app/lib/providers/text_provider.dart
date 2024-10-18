@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rsvp_app/models/reading_text.dart';
+import 'package:rsvp_app/providers/settings_provider.dart';
 import 'dart:async';
 import '../utils/text_splitter.dart';
 import '../utils/time_calculator.dart';
@@ -14,10 +15,6 @@ ReadingText _currentReadingText = ReadingText(
     wpm: 450,
     wordsPerDisplay: 6,
     maxTextWidth: 300,
-    displayReadingLines: false,
-    repeatText: false,
-    displayProgressBar: false,
-    displayTimeLeft: false,
   );
 
   List<String> _textChunks = [];
@@ -26,16 +23,20 @@ ReadingText _currentReadingText = ReadingText(
   bool _isReading = false;
   final TextSplitter _textSplitter = TextSplitter();
   late HistoryProvider _historyProvider;
+  late SettingsProvider _settingsProvider;
 
   ReadingText get getCurrentReadingText => _currentReadingText;
 
   // Constructor
-  TextProvider(this._historyProvider);
+  TextProvider(this._historyProvider, this._settingsProvider);
 
   // Add a method to update the history provider without recreating TextProvider
-  void updateHistoryProvider(HistoryProvider historyProvider) {
+  void updateProviders(HistoryProvider historyProvider, SettingsProvider settingsProvider) {
     _historyProvider = historyProvider;
+    _settingsProvider = settingsProvider;
+    notifyListeners();
   }
+
 
   // Notify listeners safely after rendering
   void _safeNotifyListeners() {
@@ -49,10 +50,8 @@ ReadingText _currentReadingText = ReadingText(
   int get currentChunkIndex => _currentChunkIndex;
   int get wordsPerDisplay => _currentReadingText.wordsPerDisplay;
   int get wpm => _currentReadingText.wpm;
-  bool get repeatText => _currentReadingText.repeatText;
   bool get isReading => _isReading;
   double get maxTextWidth => _currentReadingText.maxTextWidth;
-  bool get showReadingLines => _currentReadingText.displayReadingLines;
 
   // Calculate progress
   double get progress {
@@ -131,18 +130,6 @@ ReadingText _currentReadingText = ReadingText(
     notifyListeners();
   }
 
-  // Toggle reading lines
-  void toggleReadingLines(bool value) {
-    _currentReadingText = _currentReadingText.copyWith(displayReadingLines: value);
-    notifyListeners();
-  }
-
-  // Toggle repeat text
-  void toggleRepeatText(bool value) {
-    _currentReadingText = _currentReadingText.copyWith(repeatText: value);
-    notifyListeners();
-  }
-
   // Split text into chunks
   void _splitTextIntoChunks() {
     _textChunks = _textSplitter.splitTextIntoChunks(_currentReadingText.fullText, _currentReadingText.wordsPerDisplay);
@@ -171,7 +158,7 @@ ReadingText _currentReadingText = ReadingText(
       _timer = Timer(Duration(milliseconds: displayTimeInMillis), () {
         if (_currentChunkIndex < _textChunks.length - 1) {
           _currentChunkIndex++;
-        } else if (_currentReadingText.repeatText) {
+        } else if (_settingsProvider.repeatText) {
           _currentChunkIndex = 0;
         } else {
           stopReading();

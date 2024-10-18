@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rsvp_app/models/reading_text.dart';
-import 'package:rsvp_app/providers/history_provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
 import 'package:rsvp_app/screens/history_screen.dart';
 import 'package:rsvp_app/screens/reading_screen.dart';
-import 'package:rsvp_app/widgets/history_tile_widget.dart';
+import 'package:rsvp_app/screens/settings_screen.dart';
 import 'package:rsvp_app/widgets/text_input_widget.dart';
 import '../services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
@@ -27,10 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   double _maxTextWidth = 300;
   int _wpm = 200;
   int _wordsPerDisplay = 3;
-  bool _displayReadingLines = false;
-  bool _repeatText = false;
-  bool _displayProgressBar = false;
-  bool _displayTimeLeft = false;
   ReadingText? _editingReadingText;
 
   @override
@@ -51,10 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _maxTextWidth = _editingReadingText?.maxTextWidth ?? 300;
     _wpm = _editingReadingText?.wpm ?? 200;
     _wordsPerDisplay = _editingReadingText?.wordsPerDisplay ?? 3;
-    _displayReadingLines = _editingReadingText?.displayReadingLines ?? false;
-    _repeatText = _editingReadingText?.repeatText ?? false;
-    _displayProgressBar = _editingReadingText?.displayProgressBar ?? false;
-    _displayTimeLeft = _editingReadingText?.displayTimeLeft ?? false;
   }
 
   @override
@@ -108,8 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               _buildWPMSlider(),
               _buildDisplaySettings(),
-              _buildCheckBoxes(),
-              _buildHistoryOrCancelButton(),
+              _buildCancelButton(),
               _buildStartOrSaveButton(),
             ],
           ),
@@ -124,9 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Tab for settings
   Widget _buildSettingsTab() {
-    return const Center(
-      child: Text('Settings Tab - Add your settings here'),
-    );
+    return const SettingsScreen();  // Replace with the new SettingsScreen class
   }
 
   // Title input widget
@@ -198,46 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  // Checkboxes for display settings
-  Widget _buildCheckBoxes() {
-    return Column(
-      children: [
-        _buildCheckbox('Display Reading Lines', _displayReadingLines, (bool? value) {
-          setState(() {
-            _displayReadingLines = value ?? false;
-          });
-        }),
-        _buildCheckbox('Repeat Text', _repeatText, (bool? value) {
-          setState(() {
-            _repeatText = value ?? false;
-          });
-        }),
-        _buildCheckbox('Show Progress Bar', _displayProgressBar, (bool? value) {
-          setState(() {
-            _displayProgressBar = value ?? false;
-          });
-        }),
-        _buildCheckbox('Show Time Left', _displayTimeLeft, (bool? value) {
-          setState(() {
-            _displayTimeLeft = value ?? false;
-          });
-        }),
-      ],
-    );
-  }
-
-  // General checkbox widget
-  Widget _buildCheckbox(String title, bool value, Function(bool?) onChanged) {
-    return CheckboxListTile(
-      title: Text(title),
-      value: value,
-      onChanged: onChanged,
-      visualDensity: VisualDensity.compact,  // Makes the checkbox height smaller
-      contentPadding: EdgeInsets.zero,  // Optional: Removes additional padding for even more compactness
-    );
-  }
-
   // File upload button
   Widget _buildFileUploadButton() {
     return SizedBox(
@@ -256,12 +204,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // History or cancel button
-  Widget _buildHistoryOrCancelButton() {
+  Widget _buildCancelButton() {
     return _editingReadingText != null ? SizedBox(
       height: 40,  // Set a larger height
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _editingReadingText != null ? _handleCancelChanges : _goToHistoryScreen,
+        onPressed: _handleCancelChanges,
         child: const Text(
           'Cancel',
           style: TextStyle(fontSize: 18),  // Increase text size slightly  
@@ -273,10 +221,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleCancelChanges() {
     // Just pop the screen without saving changes
     Navigator.pop(context);
-  }
-
-  void _goToHistoryScreen() {
-    Navigator.pushNamed(context, '/history');
   }
 
   // Start reading or save text button with increased size
@@ -315,10 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
         wpm: _wpm,
         wordsPerDisplay: _wordsPerDisplay,
         maxTextWidth: _maxTextWidth,
-        displayReadingLines: _displayReadingLines,
-        repeatText: _repeatText,
-        displayProgressBar: _displayProgressBar,
-        displayTimeLeft: _displayTimeLeft,
       );
 
       final textProvider = Provider.of<TextProvider>(context, listen: false);
@@ -346,10 +286,6 @@ class _HomeScreenState extends State<HomeScreen> {
         wpm: _wpm,
         wordsPerDisplay: _wordsPerDisplay,
         maxTextWidth: _maxTextWidth,
-        displayReadingLines: _displayReadingLines,
-        repeatText: _repeatText,
-        displayProgressBar: _displayProgressBar,
-        displayTimeLeft: _displayTimeLeft,
       );
     } else {
       readingText = ReadingText(
@@ -358,10 +294,6 @@ class _HomeScreenState extends State<HomeScreen> {
         wpm: _wpm,
         wordsPerDisplay: _wordsPerDisplay,
         maxTextWidth: _maxTextWidth,
-        displayReadingLines: _displayReadingLines,
-        repeatText: _repeatText,
-        displayProgressBar: _displayProgressBar,
-        displayTimeLeft: _displayTimeLeft,
       );
     }
 

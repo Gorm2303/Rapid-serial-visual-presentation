@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rsvp_app/providers/text_provider.dart';
+import 'package:rsvp_app/providers/settings_provider.dart';  // Import SettingsProvider
 
 class ReadingWidget extends StatelessWidget {
   final double maxWidth;
@@ -10,11 +11,12 @@ class ReadingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textProvider = Provider.of<TextProvider>(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);  // Get SettingsProvider
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (textProvider.showReadingLines)
+        if (settingsProvider.displayReadingLines)  // Use global setting for reading lines
           Container(
             height: 2,
             width: maxWidth,
@@ -29,7 +31,7 @@ class ReadingWidget extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ),
-        if (textProvider.showReadingLines)
+        if (settingsProvider.displayReadingLines)  // Use global setting for reading lines
           Container(
             height: 2,
             width: maxWidth,
@@ -37,14 +39,14 @@ class ReadingWidget extends StatelessWidget {
             margin: const EdgeInsets.only(top: 10),
           ),
         const SizedBox(height: 16),
-        // Display progress bar if enabled
-        if (textProvider.getCurrentReadingText.displayProgressBar)
+        // Display progress bar if enabled in global settings
+        if (settingsProvider.showProgressBar) 
           LinearProgressIndicator(
             value: textProvider.progress,
           ),
         const SizedBox(height: 16),
-        // Display time left if enabled
-        if (textProvider.getCurrentReadingText.displayTimeLeft)
+        // Display time left if enabled in global settings
+        if (settingsProvider.showTimeLeft) 
           Text(
             'Time Left: ${textProvider.formattedRemainingTime}',
             style: const TextStyle(fontSize: 16),

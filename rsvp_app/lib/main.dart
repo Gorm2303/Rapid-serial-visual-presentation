@@ -18,7 +18,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Initialize HistoryProvider first
+        // SettingsProvider should be initialized first
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+
+        // Initialize HistoryProvider next
         ChangeNotifierProvider(
           create: (context) {
             final storageService = StorageService();
@@ -28,17 +31,17 @@ class MyApp extends StatelessWidget {
           },
         ),
 
-        // Use ProxyProvider to ensure TextProvider is passed HistoryProvider without being recreated unnecessarily
-        ChangeNotifierProxyProvider<HistoryProvider, TextProvider>(
-          create: (context) => TextProvider(Provider.of<HistoryProvider>(context, listen: false)),
-          update: (context, historyProvider, textProvider) {
-            textProvider?.updateHistoryProvider(historyProvider); // Update the existing instance
-            return textProvider ?? TextProvider(historyProvider); // Return the same instance or create one if null
+        // Use ProxyProvider to ensure TextProvider is passed both HistoryProvider and SettingsProvider
+        ChangeNotifierProxyProvider2<HistoryProvider, SettingsProvider, TextProvider>(
+          create: (context) => TextProvider(
+            Provider.of<HistoryProvider>(context, listen: false),
+            Provider.of<SettingsProvider>(context, listen: false),
+          ),
+          update: (context, historyProvider, settingsProvider, textProvider) {
+            textProvider?.updateProviders(historyProvider, settingsProvider); // Update both providers in the existing instance
+            return textProvider ?? TextProvider(historyProvider, settingsProvider); // Return the same instance or create one if null
           },
         ),
-
-        // SettingsProvider
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
