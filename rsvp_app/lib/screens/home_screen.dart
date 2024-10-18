@@ -25,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _wordsPerDisplay = 3;  // Default Words Per Display
   bool _displayReadingLines = false;  // Default Display Reading Lines
   bool _repeatText = false;  // Default Repeat Text
-
+  bool _displayProgressBar = false;  // Default Show Progress Bar
+  bool _displayTimeLeft = false;  // Default Show Time Left Text
   ReadingText? _editingReadingText;  // This will hold the state for readingText
 
   @override
@@ -44,6 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _wordsPerDisplay = _editingReadingText?.wordsPerDisplay ?? 3;
     _displayReadingLines = _editingReadingText?.displayReadingLines ?? false;
     _repeatText = _editingReadingText?.repeatText ?? false;
+    _displayProgressBar = widget.readingText?.displayProgressBar ?? false;
+    _displayTimeLeft = widget.readingText?.displayTimeLeft ?? false;
   }
 
   @override
@@ -138,6 +141,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
 
+                // Checkbox for displaying the progress bar
+                CheckboxListTile(
+                  title: const Text('Show Progress Bar'),
+                  value: _displayProgressBar,  // Bind to local variable
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      setState(() {
+                        _displayProgressBar = value;  // Update the local state when checked/unchecked
+                      });
+                    }
+                  },
+                ),
+
+                // Checkbox for displaying the time left text
+                CheckboxListTile(
+                  title: const Text('Show Time Left'),
+                  value: _displayTimeLeft,  // Bind to local variable
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      setState(() {
+                        _displayTimeLeft = value;  // Update the local state when checked/unchecked
+                      });
+                    }
+                  },
+                ),
+
                 ElevatedButton(
                   onPressed: () async {
                     String? fileContent = await _fileService.pickTextFile();
@@ -161,13 +190,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 ElevatedButton(
                   onPressed: () {
-                    String title;
-                    if (_textController.text.length < 60) {
-                      title = _textController.text;
+                    if (_textController.text.isEmpty) {
+                      return; // Ensure there's text in the controller
+                    }
+
+                    String title = '';  // Initialize the title
+
+                    // Check if the user has provided a title in the TextInputWidget
+                    if (_editingReadingText != null && _editingReadingText!.title.isNotEmpty) {
+                      title = _editingReadingText!.title;  // Use the existing title if editing and a title is provided
                     } else {
-                      title = _textController.text
-                          .substring(0, 60)
-                          .replaceAll(RegExp(r'\s+'), ' ');
+                      // Otherwise, derive the title from the full text content if no title is provided
+                      if (_textController.text.length < 60) {
+                        title = _textController.text;
+                      } else {
+                        title = _textController.text
+                            .substring(0, 60)
+                            .replaceAll(RegExp(r'\s+'), ' ');  // Replace multiple spaces with a single space
+                      }
                     }
 
                     ReadingText readingText;
@@ -182,6 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxTextWidth: _maxTextWidth,
                         displayReadingLines: _displayReadingLines,  // Use local variable
                         repeatText: _repeatText,  // Use local variable
+                        displayProgressBar: _displayProgressBar,  // Use local variable
+                        displayTimeLeft: _displayTimeLeft,  // Use local variable
                       );
                     } else {
                       // Create a new ReadingText if not editing
@@ -193,6 +235,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         maxTextWidth: _maxTextWidth,
                         displayReadingLines: _displayReadingLines,  // Use local variable
                         repeatText: _repeatText,  // Use local variable
+                        displayProgressBar: _displayProgressBar,  // Use local variable
+                        displayTimeLeft: _displayTimeLeft,  // Use local variable
                       );
                     }
 

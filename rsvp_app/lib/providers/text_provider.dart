@@ -16,6 +16,8 @@ ReadingText _currentReadingText = ReadingText(
     maxTextWidth: 300,
     displayReadingLines: false,
     repeatText: false,
+    displayProgressBar: false,
+    displayTimeLeft: false,
   );
 
   List<String> _textChunks = [];
@@ -51,6 +53,11 @@ ReadingText _currentReadingText = ReadingText(
   bool get isReading => _isReading;
   double get maxTextWidth => _currentReadingText.maxTextWidth;
   bool get showReadingLines => _currentReadingText.displayReadingLines;
+
+  // Calculate progress
+  double get progress {
+    return (_currentChunkIndex + 1) / _textChunks.length;
+  }
 
   // Calculate remaining reading time
   double get remainingTime {
@@ -219,15 +226,12 @@ ReadingText _currentReadingText = ReadingText(
   }
 
   // Update history entry
-  void _updateHistory() {
-    final progress = (_currentChunkIndex + 1) / _textChunks.length;
-    final remainingTime = formattedRemainingTime;
-
+  void _updateHistory() {    
     _historyProvider.addOrUpdateHistoryEntry(
       HistoryEntry(
         readingText: _currentReadingText,
         progress: progress,
-        timeLeft: remainingTime,
+        timeLeft: formattedRemainingTime,
       ),
     );
   }

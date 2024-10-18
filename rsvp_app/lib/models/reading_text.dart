@@ -9,6 +9,8 @@ class ReadingText {
   final double maxTextWidth;
   final bool displayReadingLines;
   final bool repeatText;
+  final bool displayProgressBar;  // New field for progress bar
+  final bool displayTimeLeft;  // New field for time left
 
   // Constructor where textId is automatically generated
   ReadingText({
@@ -20,6 +22,8 @@ class ReadingText {
     required this.maxTextWidth,
     required this.displayReadingLines,
     required this.repeatText,
+    required this.displayProgressBar,  // New field for progress bar
+    required this.displayTimeLeft,  // New field for time left
   }) : textId = textId ?? const Uuid().v4();  // Assigns a new UUID if not provided
 
   // Convert ReadingText object to a map
@@ -33,6 +37,8 @@ class ReadingText {
       'maxTextWidth': maxTextWidth,
       'displayReadingLines': displayReadingLines,
       'repeatText': repeatText,
+      'displayProgressBar': displayProgressBar,  // New field for progress bar
+      'displayTimeLeft': displayTimeLeft,  // New field for time left
     };
   }
 
@@ -45,8 +51,10 @@ class ReadingText {
       wpm: map['wpm'],
       wordsPerDisplay: map['wordsPerDisplay'],
       maxTextWidth: map['maxTextWidth'],
-      displayReadingLines: map['displayReadingLines'],
-      repeatText: map['repeatText'],
+      displayReadingLines: map['displayReadingLines'] ?? false,  // Provide default value if null
+      repeatText: map['repeatText'] ?? false,  // Provide default value if null
+      displayProgressBar: map['displayProgressBar'] ?? false,  // Provide default value if null
+      displayTimeLeft: map['displayTimeLeft'] ?? false,  // Provide default value if null
     );
   }
 
@@ -59,8 +67,10 @@ class ReadingText {
       wpm: json['wpm'],
       wordsPerDisplay: json['wordsPerDisplay'],
       maxTextWidth: json['maxTextWidth'],
-      displayReadingLines: json['displayReadingLines'],
-      repeatText: json['repeatText'],
+      displayReadingLines: json['displayReadingLines'] ?? false,  // Provide default value if null
+      repeatText: json['repeatText'] ?? false,  // Provide default value if null
+      displayProgressBar: json['displayProgressBar'] ?? false,  // Provide default value if null
+      displayTimeLeft: json['displayTimeLeft'] ?? false,  // Provide default value if null
     );
   }
 
@@ -74,6 +84,8 @@ class ReadingText {
       'maxTextWidth': maxTextWidth,
       'displayReadingLines': displayReadingLines,
       'repeatText': repeatText,
+      'displayProgressBar': displayProgressBar,  // New field for progress bar
+      'displayTimeLeft': displayTimeLeft,  // New field for time left
     };
   }
 
@@ -86,6 +98,8 @@ class ReadingText {
     double? maxTextWidth,
     bool? displayReadingLines,
     bool? repeatText,
+    bool? displayProgressBar,  // New field for progress bar
+    bool? displayTimeLeft,  // New field for time left
   }) {
     return ReadingText(
       textId: textId,
@@ -96,6 +110,8 @@ class ReadingText {
       maxTextWidth: maxTextWidth ?? this.maxTextWidth,
       displayReadingLines: displayReadingLines ?? this.displayReadingLines,
       repeatText: repeatText ?? this.repeatText,
+      displayProgressBar: displayProgressBar ?? this.displayProgressBar,  // New field for progress bar
+      displayTimeLeft: displayTimeLeft ?? this.displayTimeLeft,  // New field for time left
     );
   }
 }

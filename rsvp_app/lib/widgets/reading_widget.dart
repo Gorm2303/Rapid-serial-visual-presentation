@@ -14,7 +14,6 @@ class ReadingWidget extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Display Reading Lines if enabled
         if (textProvider.showReadingLines)
           Container(
             height: 2,
@@ -22,18 +21,14 @@ class ReadingWidget extends StatelessWidget {
             color: Colors.grey,
             margin: const EdgeInsets.only(bottom: 10),
           ),
-        // Constrain the width of the text to a max value
         ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: maxWidth,  // Use the passed maxWidth
-          ),
+          constraints: BoxConstraints(maxWidth: maxWidth),
           child: Text(
             textProvider.currentChunk,
             style: const TextStyle(fontSize: 24),
             textAlign: TextAlign.center,
           ),
         ),
-        // Display Reading Lines if enabled
         if (textProvider.showReadingLines)
           Container(
             height: 2,
@@ -41,7 +36,19 @@ class ReadingWidget extends StatelessWidget {
             color: Colors.grey,
             margin: const EdgeInsets.only(top: 10),
           ),
-        // Optionally add more widgets for time or controls here
+        const SizedBox(height: 16),
+        // Display progress bar if enabled
+        if (textProvider.getCurrentReadingText.displayProgressBar)
+          LinearProgressIndicator(
+            value: textProvider.progress,
+          ),
+        const SizedBox(height: 16),
+        // Display time left if enabled
+        if (textProvider.getCurrentReadingText.displayTimeLeft)
+          Text(
+            'Time Left: ${textProvider.formattedRemainingTime}',
+            style: const TextStyle(fontSize: 16),
+          ),
       ],
     );
   }
