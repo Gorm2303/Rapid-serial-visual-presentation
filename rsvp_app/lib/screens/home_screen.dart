@@ -5,7 +5,6 @@ import 'package:rsvp_app/providers/text_provider.dart';
 import 'package:rsvp_app/screens/history_screen.dart';
 import 'package:rsvp_app/screens/reading_screen.dart';
 import 'package:rsvp_app/screens/settings_screen.dart';
-import 'package:rsvp_app/widgets/text_input_widget.dart';
 import '../services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
 
@@ -87,25 +86,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAddTextTab() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTitleInput(),
-              _buildTextInput(),
-              _buildFileUploadButton(),
-              const SizedBox(height: 10),
-              _buildWPMSlider(),
-              _buildDisplaySettings(),
-              _buildCancelButton(),
-              const SizedBox(height: 16),
-              _buildStartOrSaveButton(),
-            ],
+          child: SingleChildScrollView( // Wrap the column in a SingleChildScrollView
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTitleInput(),
+                _buildTextInput(),
+                _buildFileUploadButton(),
+                const SizedBox(height: 10),
+                _buildWPMSlider(),
+                _buildDisplaySettings(),
+                _buildCancelButton(),
+                const SizedBox(height: 16),
+                _buildStartOrSaveButton(),
+              ],
+            ),
           ),
         ),
-      ),
     );
   }
 
@@ -133,13 +132,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Main text input widget
   Widget _buildTextInput() {
-    return Flexible(
-      fit: FlexFit.loose,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: TextInputWidget(controller: _textController),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxHeight: 350, // Set the maximum height to 200
+      ),
+      child: TextField(
+        controller: _textController,
+        maxLines: null, // Allows unlimited lines of text
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          hintText: 'Enter or paste your text here',
+        ),
       ),
     );
   }
