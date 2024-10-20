@@ -5,7 +5,7 @@ import 'package:rsvp_app/providers/text_provider.dart';
 import 'package:rsvp_app/screens/history_screen.dart';
 import 'package:rsvp_app/screens/reading_screen.dart';
 import 'package:rsvp_app/screens/settings_screen.dart';
-import '../services/file_service.dart';
+import 'package:rsvp_app/services/file_service.dart';
 import '../widgets/wpm_slider_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,11 +20,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late TextEditingController _textController;
   late TextEditingController _titleController;
-  final FileService _fileService = FileService();
 
   double _maxTextWidth = 300;
-  int _wpm = 200;
-  int _wordsPerDisplay = 3;
+  int _wpm = 450;
+  int _wordsPerDisplay = 4;
   ReadingText? _editingReadingText;
 
   @override
@@ -43,8 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
       text: _editingReadingText?.title ?? '',
     );
     _maxTextWidth = _editingReadingText?.maxTextWidth ?? 300;
-    _wpm = _editingReadingText?.wpm ?? 200;
-    _wordsPerDisplay = _editingReadingText?.wordsPerDisplay ?? 3;
+    _wpm = _editingReadingText?.wpm ?? 450;
+    _wordsPerDisplay = _editingReadingText?.wordsPerDisplay ?? 4;
   }
 
   @override
@@ -198,12 +197,15 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () async {
-          String? fileContent = await _fileService.pickTextFile();
+          // Initialize FileService dynamically here
+          final fileService = FileService();
+
+          String? fileContent = await fileService.pickTextFile();
           if (fileContent != null) {
             _textController.text = fileContent;
           }
         },
-      child: const Text('Upload Text'),
+        child: const Text('Upload Text'),
       ),
     );
   }
@@ -284,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final title = _titleController.text.isNotEmpty
         ? _titleController.text
         : (_textController.text.length < 60
-            ? _textController.text
+            ? _textController.text.replaceAll(RegExp(r'\s+'), ' ')
             : _textController.text.substring(0, 60).replaceAll(RegExp(r'\s+'), ' '));
 
     ReadingText readingText;
